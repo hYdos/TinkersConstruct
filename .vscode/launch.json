@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Minecraft Client",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/run",
+      "console": "internalConsole",
+      "stopOnEntry": false,
+      "mainClass": "net.fabricmc.devlaunchinjector.Main",
+      "vmArgs": "-Dfabric.dli.config\u003d/home/haydenv/IdeaProjects/hYdos/TinkersConstruct/.gradle/loom-cache/launch.cfg -Dfabric.dli.env\u003dclient -Dfabric.dli.main\u003dnet.minecraftforge.userdev.LaunchTesting",
+      "args": "",
+      "env": {
+        "MOD_CLASSES": "main_4ece475%%/home/haydenv/IdeaProjects/hYdos/TinkersConstruct/build/resources/main:main_4ece475%%/home/haydenv/IdeaProjects/hYdos/TinkersConstruct/build/classes/java/main"
+      },
+      "projectName": ""
+    },
+    {
+      "type": "java",
+      "name": "Minecraft Server",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/run",
+      "console": "internalConsole",
+      "stopOnEntry": false,
+      "mainClass": "net.fabricmc.devlaunchinjector.Main",
+      "vmArgs": "-Dfabric.dli.config\u003d/home/haydenv/IdeaProjects/hYdos/TinkersConstruct/.gradle/loom-cache/launch.cfg -Dfabric.dli.env\u003dserver -Dfabric.dli.main\u003dnet.minecraftforge.userdev.LaunchTesting",
+      "args": "nogui",
+      "env": {
+        "MOD_CLASSES": "main_43edab3%%/home/haydenv/IdeaProjects/hYdos/TinkersConstruct/build/resources/main:main_43edab3%%/home/haydenv/IdeaProjects/hYdos/TinkersConstruct/build/classes/java/main"
+      },
+      "projectName": ""
+    }
+  ]
+}
