@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.library;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -107,9 +107,9 @@ public class MaterialRegistryImpl implements IMaterialRegistry {
 
   /** Called when the player logs in to send packets */
   private void handleLogin(PlayerLoggedInEvent event) {
-    PlayerEntity player = event.getPlayer();
-    if (player instanceof ServerPlayerEntity) {
-      ServerPlayerEntity serverPlayer = (ServerPlayerEntity)player;
+    Player player = event.getPlayer();
+    if (player instanceof ServerPlayer) {
+      ServerPlayer serverPlayer = (ServerPlayer)player;
       TinkerNetwork network = TinkerNetwork.getInstance();
       PacketTarget target = PacketDistributor.PLAYER.with(() -> serverPlayer);
       network.send(target, materialManager.getUpdatePacket());

@@ -1,10 +1,5 @@
 package slimeknights.tconstruct.smeltery.client.render;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import slimeknights.mantle.client.model.inventory.ModelItem;
 import slimeknights.mantle.client.model.util.ModelHelper;
 import slimeknights.mantle.client.render.RenderingHelper;
@@ -12,16 +7,20 @@ import slimeknights.tconstruct.common.config.Config;
 import slimeknights.tconstruct.library.client.RenderUtils;
 import slimeknights.tconstruct.library.client.model.block.MelterModel;
 import slimeknights.tconstruct.smeltery.tileentity.MelterTileEntity;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class MelterTileEntityRenderer extends TileEntityRenderer<MelterTileEntity> {
-  public MelterTileEntityRenderer(TileEntityRendererDispatcher dispatcher) {
+public class MelterTileEntityRenderer extends BlockEntityRenderer<MelterTileEntity> {
+  public MelterTileEntityRenderer(BlockEntityRenderDispatcher dispatcher) {
     super(dispatcher);
   }
 
   @Override
-  public void render(MelterTileEntity melter, float partialTicks, MatrixStack matrices, IRenderTypeBuffer buffer, int light, int combinedOverlayIn) {
+  public void render(MelterTileEntity melter, float partialTicks, PoseStack matrices, MultiBufferSource buffer, int light, int combinedOverlayIn) {
     BlockState state = melter.getBlockState();
     MelterModel.BakedModel model = ModelHelper.getBakedModel(state, MelterModel.BakedModel.class);
     if (model != null) {
@@ -41,7 +40,7 @@ public class MelterTileEntityRenderer extends TileEntityRenderer<MelterTileEntit
 
       // pop back rotation
       if (isRotated) {
-        matrices.pop();
+        matrices.popPose();
       }
     }
   }

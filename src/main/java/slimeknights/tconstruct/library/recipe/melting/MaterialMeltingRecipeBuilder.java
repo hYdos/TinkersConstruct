@@ -3,10 +3,10 @@ package slimeknights.tconstruct.library.recipe.melting;
 import com.google.gson.JsonObject;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.RecipeHelper;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
@@ -44,12 +44,12 @@ public class MaterialMeltingRecipeBuilder extends AbstractRecipeBuilder<Material
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer) {
+  public void build(Consumer<FinishedRecipe> consumer) {
     build(consumer, inputId);
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
     ResourceLocation advancementID = this.buildOptionalAdvancement(id, "melting");
     consumer.accept(new Result(id, advancementID));
   }
@@ -60,14 +60,14 @@ public class MaterialMeltingRecipeBuilder extends AbstractRecipeBuilder<Material
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
       json.addProperty("input", inputId.toString());
       json.addProperty("temperature", temperature);
       json.add("result", RecipeHelper.serializeFluidStack(result));
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return TinkerSmeltery.materialMeltingSerializer.get();
     }
   }

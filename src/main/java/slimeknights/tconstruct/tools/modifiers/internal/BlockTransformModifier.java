@@ -1,9 +1,9 @@
 package slimeknights.tconstruct.tools.modifiers.internal;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraftforge.common.ToolType;
 import slimeknights.tconstruct.library.modifiers.SingleUseModifier;
 import slimeknights.tconstruct.library.tools.item.IModifiableHarvest;
@@ -34,10 +34,10 @@ public class BlockTransformModifier extends SingleUseModifier {
   }
 
   @Override
-  public ActionResultType afterBlockUse(IModifierToolStack tool, int level, ItemUseContext context) {
+  public InteractionResult afterBlockUse(IModifierToolStack tool, int level, UseOnContext context) {
     // tool must not be broken
     if (tool.isBroken()) {
-      return ActionResultType.PASS;
+      return InteractionResult.PASS;
     }
 
     Item item = tool.getItem();
@@ -45,6 +45,6 @@ public class BlockTransformModifier extends SingleUseModifier {
       IModifiableHarvest toolCore = (IModifiableHarvest) item;
       return toolCore.getToolHarvestLogic().transformBlocks(tool, context, toolType, sound, requireGround);
     }
-    return ActionResultType.PASS;
+    return InteractionResult.PASS;
   }
 }

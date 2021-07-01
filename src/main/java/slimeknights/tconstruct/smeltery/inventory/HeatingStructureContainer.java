@@ -1,9 +1,9 @@
 package slimeknights.tconstruct.smeltery.inventory;
 
 import lombok.Getter;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.IntReferenceHolder;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.DataSlot;
 import slimeknights.tconstruct.library.utils.ValidZeroIntReference;
 import slimeknights.tconstruct.shared.inventory.TriggeringMultiModuleContainer;
 import slimeknights.tconstruct.smeltery.TinkerSmeltery;
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 public class HeatingStructureContainer extends TriggeringMultiModuleContainer<HeatingStructureTileEntity> {
   @Getter
   private final SideInventoryContainer<HeatingStructureTileEntity> sideInventory;
-  public HeatingStructureContainer(int id, @Nullable PlayerInventory inv, @Nullable HeatingStructureTileEntity structure) {
+  public HeatingStructureContainer(int id, @Nullable Inventory inv, @Nullable HeatingStructureTileEntity structure) {
     super(TinkerSmeltery.smelteryContainer.get(), id, inv, structure);
     if (inv != null && structure != null) {
       // can hold 7 in a column, so try to fill the first column first
@@ -26,7 +26,7 @@ public class HeatingStructureContainer extends TriggeringMultiModuleContainer<He
       sideInventory = new SideInventoryContainer<>(TinkerSmeltery.smelteryContainer.get(), id, inv, structure, 0, 0, calcColumns(inventory.getSlots()));
       addSubContainer(sideInventory, true);
 
-      Consumer<IntReferenceHolder> referenceConsumer = this::trackInt;
+      Consumer<DataSlot> referenceConsumer = this::addDataSlot;
       ValidZeroIntReference.trackIntArray(referenceConsumer, structure.getFuelModule());
       inventory.trackInts(array -> ValidZeroIntReference.trackIntArray(referenceConsumer, array));
     } else {
@@ -35,7 +35,7 @@ public class HeatingStructureContainer extends TriggeringMultiModuleContainer<He
     addInventorySlots();
   }
 
-  public HeatingStructureContainer(int id, PlayerInventory inv, PacketBuffer buf) {
+  public HeatingStructureContainer(int id, Inventory inv, FriendlyByteBuf buf) {
     this(id, inv, getTileEntityFromBuf(buf, HeatingStructureTileEntity.class));
   }
 

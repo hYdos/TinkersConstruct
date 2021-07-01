@@ -4,13 +4,13 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IIntArray;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.LazyOptional;
@@ -40,7 +40,7 @@ import java.util.function.Supplier;
  * Module handling fuel consumption for the melter and smeltery
  */
 @RequiredArgsConstructor
-public class FuelModule implements IIntArray {
+public class FuelModule implements ContainerData {
   /** Block position that will never be valid in world, used for sync */
   private static final BlockPos NULL_POS = new BlockPos(0, -1, 0);
   /** Temperature used for solid fuels, hot enough to melt iron */
@@ -100,8 +100,8 @@ public class FuelModule implements IIntArray {
   }
 
   /** Gets a nonnull world instance from the parent */
-  private World getWorld() {
-    return Objects.requireNonNull(parent.getWorld(), "Parent tile entity has null world");
+  private Level getWorld() {
+    return Objects.requireNonNull(parent.getLevel(), "Parent tile entity has null world");
   }
 
   /**
@@ -158,7 +158,7 @@ public class FuelModule implements IIntArray {
       if (time > 0) {
         if (consume) {
           ItemStack extracted = handler.extractItem(i, 1, false);
-          if (extracted.isItemEqual(stack)) {
+          if (extracted.sameItem(stack)) {
             fuel += time;
             fuelQuality = time;
             temperature = SOLID_TEMPERATURE;
@@ -226,7 +226,7 @@ public class FuelModule implements IIntArray {
    * @return   Temperature of the consumed fuel, 0 if none found
    */
   private int tryFindFuel(BlockPos pos, boolean consume) {
-    TileEntity te = getWorld().getTileEntity(pos);
+    BlockEntity te = getWorld().getBlockEntity(pos);
     if (te != null) {
       // if we find a valid cap, try to consume fuel from it
       LazyOptional<IFluidHandler> capability = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
@@ -305,7 +305,7 @@ public class FuelModule implements IIntArray {
    * Reads the fuel from NBT
    * @param nbt  NBT to read from
    */
-  public void readFromNBT(CompoundNBT nbt) {
+  public void readFromNBT(CompoundTag nbt) {
     if (nbt.contains(TAG_FUEL, NBT.TAG_ANY_NUMERIC)) {
       fuel = nbt.getInt(TAG_FUEL);
     }
@@ -322,7 +322,7 @@ public class FuelModule implements IIntArray {
    * @param nbt  NBT to write to
    * @return  NBT written to
    */
-  public CompoundNBT writeToNBT(CompoundNBT nbt) {
+  public CompoundTag writeToNBT(CompoundTag nbt) {
     nbt.putInt(TAG_FUEL, fuel);
     nbt.putInt(TAG_TEMPERATURE, temperature);
     // technically unneeded for melters, but does not hurt to add
@@ -342,7 +342,7 @@ public class FuelModule implements IIntArray {
   private static final int LAST_Z = 5;
 
   @Override
-  public int size() {
+  public int getCount() {
     return 6;
   }
 
@@ -432,7 +432,7 @@ public class FuelModule implements IIntArray {
 
     // fetch primary fuel handler
     if (fluidHandler == null && itemHandler == null) {
-      TileEntity te = getWorld().getTileEntity(mainTank);
+      BlockEntity te = getWorld().getBlockEntity(mainTank);
       if (te != null) {
         LazyOptional<IFluidHandler> fluidCap = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
         if (fluidCap.isPresent()) {
@@ -472,14 +472,14 @@ public class FuelModule implements IIntArray {
     // add extra fluid display
     if (!info.isEmpty()) {
       // fetch fluid handler list if missing
-      World world = getWorld();
+      Level world = getWorld();
       if (tankDisplayHandlers == null) {
         tankDisplayHandlers = new ArrayList<>();
         // only need to fetch this if either case requests
         if (positions == null) positions = tankSupplier.get();
         for (BlockPos pos : positions) {
           if (!pos.equals(mainTank)) {
-            TileEntity te = world.getTileEntity(pos);
+            BlockEntity te = world.getBlockEntity(pos);
             if (te != null) {
               LazyOptional<IFluidHandler> handler = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
               if (handler.isPresent()) {

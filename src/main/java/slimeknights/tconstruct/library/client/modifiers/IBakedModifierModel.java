@@ -1,10 +1,10 @@
 package slimeknights.tconstruct.library.client.modifiers;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.RenderMaterial;
+import com.mojang.math.Transformation;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.util.math.vector.TransformationMatrix;
+import net.minecraft.client.resources.model.Material;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
 
@@ -33,5 +33,5 @@ public interface IBakedModifierModel {
    * @param transforms    Transforms to apply
    * @return  List of baked quads
    */
-  ImmutableList<BakedQuad> getQuads(IModifierToolStack tool, ModifierEntry modifier, Function<RenderMaterial,TextureAtlasSprite> spriteGetter, TransformationMatrix transforms, boolean isLarge);
+  ImmutableList<BakedQuad> getQuads(IModifierToolStack tool, ModifierEntry modifier, Function<Material,TextureAtlasSprite> spriteGetter, Transformation transforms, boolean isLarge);
 }

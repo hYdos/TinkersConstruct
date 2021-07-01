@@ -1,57 +1,57 @@
 package slimeknights.tconstruct.smeltery.client.render;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.block.BlockState;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.ItemTransforms.TransformType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Quaternion;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import slimeknights.tconstruct.smeltery.block.ControllerBlock;
 import slimeknights.tconstruct.smeltery.tileentity.HeatingStructureTileEntity;
 import slimeknights.tconstruct.smeltery.tileentity.module.MeltingModuleInventory;
 import slimeknights.tconstruct.smeltery.tileentity.multiblock.HeatingStructureMultiblock.StructureData;
 
-public class HeatingStructureTileEntityRenderer extends TileEntityRenderer<HeatingStructureTileEntity> {
+public class HeatingStructureTileEntityRenderer extends BlockEntityRenderer<HeatingStructureTileEntity> {
  private static final float ITEM_SCALE = 15f/16f;
-  public HeatingStructureTileEntityRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+  public HeatingStructureTileEntityRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
     super(rendererDispatcherIn);
   }
 
   @Override
-  public void render(HeatingStructureTileEntity smeltery, float partialTicks, MatrixStack matrices, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
-    World world = smeltery.getWorld();
+  public void render(HeatingStructureTileEntity smeltery, float partialTicks, PoseStack matrices, MultiBufferSource buffer, int combinedLight, int combinedOverlay) {
+    Level world = smeltery.getLevel();
     if (world == null) return;
     BlockState state = smeltery.getBlockState();
-    if (!state.get(ControllerBlock.IN_STRUCTURE)) return;
+    if (!state.getValue(ControllerBlock.IN_STRUCTURE)) return;
     StructureData structure = smeltery.getStructure();
     if (structure == null) return;
 
     // relevant positions
-    BlockPos pos = smeltery.getPos();
+    BlockPos pos = smeltery.getBlockPos();
     BlockPos minPos = structure.getMinInside();
     BlockPos maxPos = structure.getMaxInside();
 
     // offset to make rendering min pos relative
-    matrices.push();
+    matrices.pushPose();
     matrices.translate(minPos.getX() - pos.getX(), minPos.getY() - pos.getY(), minPos.getZ() - pos.getZ());
     // render tank fluids, use minPos for brightness
-    SmelteryTankRenderer.renderFluids(matrices, buffer, smeltery.getTank(), minPos, maxPos, WorldRenderer.getCombinedLight(world, minPos));
+    SmelteryTankRenderer.renderFluids(matrices, buffer, smeltery.getTank(), minPos, maxPos, LevelRenderer.getLightColor(world, minPos));
 
     // render items
     int xd = 1 + maxPos.getX() - minPos.getX();
     int zd = 1 + maxPos.getZ() - minPos.getZ();
     int layer = xd * zd;
-    Direction facing = state.get(ControllerBlock.FACING);
-    Quaternion itemRotation = Vector3f.YP.rotationDegrees(-90.0F * (float)facing.getHorizontalIndex());
+    Direction facing = state.getValue(ControllerBlock.FACING);
+    Quaternion itemRotation = Vector3f.YP.rotationDegrees(-90.0F * (float)facing.get2DDataValue());
     MeltingModuleInventory inventory = smeltery.getMeltingInventory();
     for (int i = 0; i < inventory.getSlots(); i++) {
       ItemStack stack = inventory.getStackInSlot(i);
@@ -61,25 +61,25 @@ public class HeatingStructureTileEntityRenderer extends TileEntityRenderer<Heati
         int layerIndex = i % layer;
         int offsetX = layerIndex % xd;
         int offsetZ = layerIndex / xd;
-        BlockPos itemPos = minPos.add(offsetX, height, offsetZ);
+        BlockPos itemPos = minPos.offset(offsetX, height, offsetZ);
 
         // offset to the slot position in the structure, scale, and rotate the item
-        matrices.push();
+        matrices.pushPose();
         matrices.translate(offsetX + 0.5f, height + 0.5f, offsetZ + 0.5f);
-        matrices.rotate(itemRotation);
+        matrices.mulPose(itemRotation);
         matrices.scale(ITEM_SCALE, ITEM_SCALE, ITEM_SCALE);
         Minecraft.getInstance().getItemRenderer()
-                 .renderItem(stack, TransformType.NONE, WorldRenderer.getCombinedLight(world, itemPos),
+                 .renderStatic(stack, TransformType.NONE, LevelRenderer.getLightColor(world, itemPos),
                              OverlayTexture.NO_OVERLAY, matrices, buffer);
-        matrices.pop();
+        matrices.popPose();
       }
     }
 
-    matrices.pop();
+    matrices.popPose();
   }
 
   @Override
   public boolean isGlobalRenderer(HeatingStructureTileEntity tile) {
-    return tile.getBlockState().get(ControllerBlock.IN_STRUCTURE) && tile.getStructure() != null;
+    return tile.getBlockState().getValue(ControllerBlock.IN_STRUCTURE) && tile.getStructure() != null;
   }
 }

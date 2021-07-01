@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.modifiers.IncrementalModifier;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
 import slimeknights.tconstruct.tools.TinkerModifiers;
 
 import java.util.List;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 
 public class ReinforcedModifier extends IncrementalModifier {
   public ReinforcedModifier() {
@@ -32,13 +32,13 @@ public class ReinforcedModifier extends IncrementalModifier {
   }
 
   @Override
-  public void addInformation(IModifierToolStack tool, int level, List<ITextComponent> tooltip, boolean isAdvanced, boolean detailed) {
+  public void addInformation(IModifierToolStack tool, int level, List<Component> tooltip, boolean isAdvanced, boolean detailed) {
     float reinforced;
     if (tool.getModifierLevel(TinkerModifiers.unbreakable.get()) > 0) {
       reinforced = 1;
     } else {
       reinforced = 1 - 1f / (getScaledLevel(tool, level) + 1);
     }
-    tooltip.add(applyStyle(new StringTextComponent(Util.dfPercent.format(reinforced)).appendString(" ").append(makeDisplayName())));
+    tooltip.add(applyStyle(new TextComponent(Util.dfPercent.format(reinforced)).append(" ").append(makeDisplayName())));
   }
 }

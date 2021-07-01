@@ -241,7 +241,7 @@ public class SingleKeyMultimap<K,V> implements Multimap<K,V> {
   }
 
   @AllArgsConstructor
-  private class SingleKeyEntry implements Map.Entry<K,V> {
+  private class SingleKeyEntry implements Entry<K,V> {
     private V value;
 
     @Override

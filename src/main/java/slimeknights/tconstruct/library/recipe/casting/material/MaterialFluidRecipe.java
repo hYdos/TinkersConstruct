@@ -2,14 +2,14 @@ package slimeknights.tconstruct.library.recipe.casting.material;
 
 import com.google.gson.JsonObject;
 import lombok.Getter;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.FluidIngredient;
 import slimeknights.mantle.recipe.ICustomOutputRecipe;
@@ -93,57 +93,57 @@ public class MaterialFluidRecipe implements ICustomOutputRecipe<ICastingInventor
   }
 
   @Override
-  public final boolean matches(ICastingInventory inv, World worldIn) {
+  public final boolean matches(ICastingInventory inv, Level worldIn) {
     return matches(inv);
   }
 
   @Override
-  public IRecipeSerializer<?> getSerializer() {
+  public RecipeSerializer<?> getSerializer() {
     return TinkerSmeltery.materialFluidRecipe.get();
   }
 
   @Override
-  public IRecipeType<?> getType() {
+  public RecipeType<?> getType() {
     return RecipeTypes.DATA;
   }
 
   public static class Serializer extends LoggingRecipeSerializer<MaterialFluidRecipe> {
     @Override
-    public MaterialFluidRecipe read(ResourceLocation id, JsonObject json) {
+    public MaterialFluidRecipe fromJson(ResourceLocation id, JsonObject json) {
       FluidIngredient fluid = FluidIngredient.deserialize(json, "fluid");
-      int temperature = JSONUtils.getInt(json, "temperature");
+      int temperature = GsonHelper.getAsInt(json, "temperature");
       MaterialId input = null;
       if (json.has("input")) {
-        input = new MaterialId(JSONUtils.getString(json, "input"));
+        input = new MaterialId(GsonHelper.getAsString(json, "input"));
       }
-      MaterialId output = new MaterialId(JSONUtils.getString(json, "output"));
+      MaterialId output = new MaterialId(GsonHelper.getAsString(json, "output"));
       return new MaterialFluidRecipe(id, fluid, temperature, input, output);
     }
 
     @Nullable
     @Override
-    protected MaterialFluidRecipe readSafe(ResourceLocation id, PacketBuffer buffer) {
+    protected MaterialFluidRecipe readSafe(ResourceLocation id, FriendlyByteBuf buffer) {
       FluidIngredient fluid = FluidIngredient.read(buffer);
       int temperature = buffer.readInt();
       MaterialId input = null;
       if (buffer.readBoolean()) {
-        input = new MaterialId(buffer.readString(Short.MAX_VALUE));
+        input = new MaterialId(buffer.readUtf(Short.MAX_VALUE));
       }
-      MaterialId output = new MaterialId(buffer.readString(Short.MAX_VALUE));
+      MaterialId output = new MaterialId(buffer.readUtf(Short.MAX_VALUE));
       return new MaterialFluidRecipe(id, fluid, temperature, input, output);
     }
 
     @Override
-    protected void writeSafe(PacketBuffer buffer, MaterialFluidRecipe recipe) {
+    protected void writeSafe(FriendlyByteBuf buffer, MaterialFluidRecipe recipe) {
       recipe.fluid.write(buffer);
       buffer.writeInt(recipe.temperature);
       if (recipe.inputId != null) {
         buffer.writeBoolean(true);
-        buffer.writeString(recipe.inputId.toString());
+        buffer.writeUtf(recipe.inputId.toString());
       } else {
         buffer.writeBoolean(false);
       }
-      buffer.writeString(recipe.outputId.toString());
+      buffer.writeUtf(recipe.outputId.toString());
     }
   }
 }

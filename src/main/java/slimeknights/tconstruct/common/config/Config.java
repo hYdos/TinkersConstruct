@@ -54,8 +54,8 @@ public class Config {
 
     public final ConfigValue<String> showOnlyToolMaterial;
     public final ConfigValue<String> showOnlyPartMaterial;
-    public final ForgeConfigSpec.BooleanValue showAllTableVariants;
-    public final ForgeConfigSpec.BooleanValue showAllAnvilVariants;
+    public final BooleanValue showAllTableVariants;
+    public final BooleanValue showAllAnvilVariants;
 
     Common(ForgeConfigSpec.Builder builder) {
       builder.comment("Everything to do with gameplay").push("gameplay");
@@ -226,10 +226,10 @@ public class Config {
    */
   public static class Client {
     //public final ForgeConfigSpec.BooleanValue temperatureInCelsius;
-    public final ForgeConfigSpec.BooleanValue tankFluidModel;
-    public final ForgeConfigSpec.BooleanValue extraToolTips;
-    public final ForgeConfigSpec.BooleanValue logMissingMaterialTextures;
-    public final ForgeConfigSpec.BooleanValue logMissingModifierTextures;
+    public final BooleanValue tankFluidModel;
+    public final BooleanValue extraToolTips;
+    public final BooleanValue logMissingMaterialTextures;
+    public final BooleanValue logMissingModifierTextures;
 
     Client(ForgeConfigSpec.Builder builder) {
       builder.comment("Client only settings").push("client");

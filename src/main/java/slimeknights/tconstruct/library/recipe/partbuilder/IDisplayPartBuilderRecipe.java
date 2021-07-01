@@ -1,12 +1,12 @@
 package slimeknights.tconstruct.library.recipe.partbuilder;
 
-import net.minecraft.item.ItemStack;
 import slimeknights.tconstruct.library.materials.IMaterial;
 import slimeknights.tconstruct.library.materials.MaterialId;
 import slimeknights.tconstruct.tables.TinkerTables;
 
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Part builder recipes that can show in JEI

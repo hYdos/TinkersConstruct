@@ -2,14 +2,14 @@ package slimeknights.tconstruct.smeltery.tileentity;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -78,7 +78,7 @@ public class TankTileEntity extends SmelteryComponentTileEntity implements ITank
 
   /** Extendable constructor */
   @SuppressWarnings("WeakerAccess")
-  protected TankTileEntity(TileEntityType<?> type, ITankBlock block) {
+  protected TankTileEntity(BlockEntityType<?> type, ITankBlock block) {
     super(type);
     tank = new FluidTankAnimated(block.getCapacity(), this);
     holder = LazyOptional.of(() -> tank);
@@ -113,8 +113,8 @@ public class TankTileEntity extends SmelteryComponentTileEntity implements ITank
   @Override
   public void onTankContentsChanged() {
     ITankTileEntity.super.onTankContentsChanged();
-    if (this.world != null) {
-      world.getLightManager().checkBlock(this.pos);
+    if (this.level != null) {
+      level.getLightEngine().checkBlock(this.worldPosition);
     }
   }
 
@@ -122,8 +122,8 @@ public class TankTileEntity extends SmelteryComponentTileEntity implements ITank
   public void updateFluidTo(FluidStack fluid) {
     ITankTileEntity.super.updateFluidTo(fluid);
     // update light if the fluid changes
-    if (this.world != null) {
-      world.getLightManager().checkBlock(this.pos);
+    if (this.level != null) {
+      level.getLightEngine().checkBlock(this.worldPosition);
     }
   }
 
@@ -144,13 +144,13 @@ public class TankTileEntity extends SmelteryComponentTileEntity implements ITank
    * Updates the tank from an NBT tag, used in the block
    * @param nbt  tank NBT
    */
-  public void updateTank(CompoundNBT nbt) {
+  public void updateTank(CompoundTag nbt) {
     if (nbt.isEmpty()) {
       tank.setFluid(FluidStack.EMPTY);
     } else {
       tank.readFromNBT(nbt);
-      if (world != null) {
-        world.getLightManager().checkBlock(pos);
+      if (level != null) {
+        level.getLightEngine().checkBlock(worldPosition);
       }
     }
   }
@@ -161,18 +161,18 @@ public class TankTileEntity extends SmelteryComponentTileEntity implements ITank
   }
 
   @Override
-  public void read(BlockState state, CompoundNBT tag) {
+  public void load(BlockState state, CompoundTag tag) {
     tank.setCapacity(getCapacity(state.getBlock()));
     updateTank(tag.getCompound(NBTTags.TANK));
-    super.read(state, tag);
+    super.load(state, tag);
   }
 
   @Override
-  public void writeSynced(CompoundNBT tag) {
+  public void writeSynced(CompoundTag tag) {
     super.writeSynced(tag);
     // want tank on the client on world load
     if (!tank.isEmpty()) {
-      tag.put(NBTTags.TANK, tank.writeToNBT(new CompoundNBT()));
+      tag.put(NBTTags.TANK, tank.writeToNBT(new CompoundTag()));
     }
   }
 

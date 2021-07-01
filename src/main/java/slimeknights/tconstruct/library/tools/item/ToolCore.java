@@ -4,41 +4,41 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import lombok.Getter;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.client.util.ITooltipFlag.TooltipFlags;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.inventory.EquipmentSlotType.Group;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.item.Rarity;
-import net.minecraft.item.UseAction;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlot.Type;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.TooltipFlag.Default;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeMod;
@@ -92,13 +92,13 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   /** Modifier key to make a tool spawn an indestructable entity */
   public static final ResourceLocation RARITY = Util.getResource("rarity");
 
-  protected static final ITextComponent TOOLTIP_HOLD_SHIFT;
-  private static final ITextComponent TOOLTIP_HOLD_CTRL;
+  protected static final Component TOOLTIP_HOLD_SHIFT;
+  private static final Component TOOLTIP_HOLD_CTRL;
   static {
-    ITextComponent shift = Util.makeTranslation("key", "shift").mergeStyle(TextFormatting.YELLOW, TextFormatting.ITALIC);
-    TOOLTIP_HOLD_SHIFT = new TranslationTextComponent(Util.makeTranslationKey("tooltip", "hold_shift"), shift);
-    ITextComponent ctrl = Util.makeTranslation("key", "ctrl").mergeStyle(TextFormatting.AQUA, TextFormatting.ITALIC);
-    TOOLTIP_HOLD_CTRL = new TranslationTextComponent(Util.makeTranslationKey("tooltip", "hold_ctrl"), ctrl);
+    Component shift = Util.makeTranslation("key", "shift").withStyle(ChatFormatting.YELLOW, ChatFormatting.ITALIC);
+    TOOLTIP_HOLD_SHIFT = new TranslatableComponent(Util.makeTranslationKey("tooltip", "hold_shift"), shift);
+    Component ctrl = Util.makeTranslation("key", "ctrl").withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC);
+    TOOLTIP_HOLD_CTRL = new TranslatableComponent(Util.makeTranslationKey("tooltip", "hold_ctrl"), ctrl);
   }
 
 
@@ -115,7 +115,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public boolean hasEffect(ItemStack stack) {
+  public boolean isFoil(ItemStack stack) {
     // we use enchantments to handle some modifiers, so don't glow from them
     // however, if a modifier wants to glow let them
     return ToolStack.from(stack).getVolatileData().getBoolean(SHINY);
@@ -124,7 +124,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   @Override
   public Rarity getRarity(ItemStack stack) {
     int rarity = ToolStack.from(stack).getVolatileData().getInt(RARITY);
-    return Rarity.values()[MathHelper.clamp(rarity, 0, 3)];
+    return Rarity.values()[Mth.clamp(rarity, 0, 3)];
   }
 
   /**
@@ -158,9 +158,9 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public Entity createEntity(World world, Entity original, ItemStack stack) {
+  public Entity createEntity(Level world, Entity original, ItemStack stack) {
     if (ToolStack.from(stack).getVolatileData().getBoolean(INDESTRUCTIBLE_ENTITY)) {
-      IndestructibleEntityItem entity = new IndestructibleEntityItem(world, original.getPosX(), original.getPosY(), original.getPosZ(), stack);
+      IndestructibleEntityItem entity = new IndestructibleEntityItem(world, original.getX(), original.getY(), original.getZ(), stack);
       entity.setPickupDelayFrom(original);
       return entity;
     }
@@ -170,7 +170,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   /* Damage/Durability */
 
   @Override
-  public boolean isDamageable() {
+  public boolean canBeDepleted() {
     return true;
   }
 
@@ -256,7 +256,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
         return rgb;
       }
     }
-    return MathHelper.hsvToRGB(Math.max(0.0f, (float) (1.0f - getDamagePercentage(tool))) / 3.0f, 1.0f, 1.0f);
+    return Mth.hsvToRgb(Math.max(0.0f, (float) (1.0f - getDamagePercentage(tool))) / 3.0f, 1.0f, 1.0f);
   }
 
   /* Mining */
@@ -272,7 +272,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public int getHarvestLevel(ItemStack stack, ToolType toolClass, @Nullable PlayerEntity player, @Nullable BlockState blockState) {
+  public int getHarvestLevel(ItemStack stack, ToolType toolClass, @Nullable Player player, @Nullable BlockState blockState) {
     // brokenness is calculated in by the toolTypes check
     if (this.getToolTypes(stack).contains(toolClass)) {
       return ToolStack.from(stack).getStats().getInt(ToolStats.HARVEST_LEVEL);
@@ -282,15 +282,15 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public boolean onBlockDestroyed(ItemStack stack, World worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving) {
+  public boolean mineBlock(ItemStack stack, Level worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving) {
     ToolStack tool = ToolStack.from(stack);
     if (tool.isBroken()) {
       return false;
     }
 
-    if (!worldIn.isRemote && worldIn instanceof ServerWorld) {
+    if (!worldIn.isClientSide && worldIn instanceof ServerLevel) {
       boolean isEffective = getToolHarvestLogic().isEffective(tool, stack, state);
-      ToolHarvestContext context = new ToolHarvestContext((ServerWorld) worldIn, entityLiving, state, pos, Direction.UP, true, isEffective);
+      ToolHarvestContext context = new ToolHarvestContext((ServerLevel) worldIn, entityLiving, state, pos, Direction.UP, true, isEffective);
       for (ModifierEntry entry : tool.getModifierList()) {
         entry.getModifier().afterBlockBreak(tool, entry.getLevel(), context);
       }
@@ -314,13 +314,13 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   /* Attacking */
 
   @Override
-  public boolean onLeftClickEntity(ItemStack stack, PlayerEntity player, Entity entity) {
+  public boolean onLeftClickEntity(ItemStack stack, Player player, Entity entity) {
     return ToolAttackUtil.attackEntity(stack, this, player, entity);
   }
 
   @Override
-  public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType slot, ItemStack stack) {
-    CompoundNBT nbt = stack.getTag();
+  public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlot slot, ItemStack stack) {
+    CompoundTag nbt = stack.getTag();
     if (nbt == null || nbt.getBoolean(ToolBuildHandler.KEY_DISPLAY_TOOL)) {
       return ImmutableMultimap.of();
     }
@@ -329,11 +329,11 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
     ToolStack tool = ToolStack.from(stack);
     if (!tool.isBroken()) {
       // base stats
-      if (slot == EquipmentSlotType.MAINHAND) {
+      if (slot == EquipmentSlot.MAINHAND) {
         StatsNBT statsNBT = tool.getStats();
-        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "tconstruct.tool.attack_damage", statsNBT.getFloat(ToolStats.ATTACK_DAMAGE), AttributeModifier.Operation.ADDITION));
+        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "tconstruct.tool.attack_damage", statsNBT.getFloat(ToolStats.ATTACK_DAMAGE), AttributeModifier.Operation.ADDITION));
         // base attack speed is 4, but our numbers start from 4
-        builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(ATTACK_SPEED_MODIFIER, "tconstruct.tool.attack_speed", statsNBT.getFloat(ToolStats.ATTACK_SPEED) - 4d, AttributeModifier.Operation.ADDITION));
+        builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "tconstruct.tool.attack_speed", statsNBT.getFloat(ToolStats.ATTACK_SPEED) - 4d, AttributeModifier.Operation.ADDITION));
         // base value is 5, but our number start from 5
         double reach = statsNBT.getFloat(ToolStats.REACH) - 5d;
         if (reach != 0) {
@@ -342,7 +342,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
       }
 
       // grab attributes from modifiers, only do for hands (other slots would just be weird)
-      if (slot.getSlotType() == Group.HAND) {
+      if (slot.getType() == Type.HAND) {
         BiConsumer<Attribute,AttributeModifier> attributeConsumer = builder::put;
         for (ModifierEntry entry : tool.getModifierList()) {
           entry.getModifier().addAttributes(tool, entry.getLevel(), slot, attributeConsumer);
@@ -356,7 +356,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   /* World interaction */
 
   @Override
-  public boolean onBlockStartBreak(ItemStack stack, BlockPos pos, PlayerEntity player) {
+  public boolean onBlockStartBreak(ItemStack stack, BlockPos pos, Player player) {
     return getToolHarvestLogic().handleBlockBreak(stack, pos, player);
 
     // TODO: consider taking over PlayerInteractionManager#tryHarvestBlock and PlayerController#onPlayerDestroyBlock
@@ -383,7 +383,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   /* Modifier interactions */
 
   @Override
-  public void inventoryTick(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected) {
+  public void inventoryTick(ItemStack stack, Level worldIn, Entity entityIn, int itemSlot, boolean isSelected) {
     super.inventoryTick(stack, worldIn, entityIn, itemSlot, isSelected);
 
     // don't care about non-living, they skip most tool context
@@ -393,7 +393,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
       if (!modifiers.isEmpty()) {
         LivingEntity living = (LivingEntity) entityIn;
         // we pass in the stack for most custom context, but for the sake of armor its easier to tell them that this is the correct slot for effects
-        boolean isHeld = isSelected || living.getHeldItemOffhand() == stack;
+        boolean isHeld = isSelected || living.getOffhandItem() == stack;
         for (ModifierEntry entry : modifiers) {
           entry.getModifier().onInventoryTick(tool, entry.getLevel(), worldIn, living, itemSlot, isSelected, isHeld, stack);
         }
@@ -404,11 +404,11 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   /* Right click hooks */
   
   @Override
-  public ActionResultType onItemUseFirst(ItemStack stack, ItemUseContext context) {
+  public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
     ToolStack tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
-      ActionResultType result = entry.getModifier().beforeBlockUse(tool, entry.getLevel(), context);
-      if (result.isSuccessOrConsume()) {
+      InteractionResult result = entry.getModifier().beforeBlockUse(tool, entry.getLevel(), context);
+      if (result.consumesAction()) {
         return result;
       }
     }
@@ -416,12 +416,12 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public ActionResultType onItemUse(ItemUseContext context) {
-    ItemStack stack = context.getItem();
+  public InteractionResult useOn(UseOnContext context) {
+    ItemStack stack = context.getItemInHand();
     ToolStack tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
-      ActionResultType result = entry.getModifier().afterBlockUse(tool, entry.getLevel(), context);
-      if (result.isSuccessOrConsume()) {
+      InteractionResult result = entry.getModifier().afterBlockUse(tool, entry.getLevel(), context);
+      if (result.consumesAction()) {
         return result;
       }
     }
@@ -429,43 +429,43 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+  public InteractionResult interactLivingEntity(ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) {
     ToolStack tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
-      ActionResultType result = entry.getModifier().onEntityUse(tool, entry.getLevel(), playerIn, target, hand);
-      if (result.isSuccessOrConsume()) {
+      InteractionResult result = entry.getModifier().onEntityUse(tool, entry.getLevel(), playerIn, target, hand);
+      if (result.consumesAction()) {
         return result;
       }
     }
-    return super.itemInteractionForEntity(stack, playerIn, target, hand);
+    return super.interactLivingEntity(stack, playerIn, target, hand);
   }
 
   @Override
-  public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-    ItemStack stack = playerIn.getHeldItem(handIn);
-    ToolStack tool = ToolStack.from(playerIn.getHeldItem(handIn));
+  public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
+    ItemStack stack = playerIn.getItemInHand(handIn);
+    ToolStack tool = ToolStack.from(playerIn.getItemInHand(handIn));
     for (ModifierEntry entry : tool.getModifierList()) {
-      ActionResultType result = entry.getModifier().onToolUse(tool, entry.getLevel(), worldIn, playerIn, handIn);
-      if (result.isSuccessOrConsume()) {
-        return new ActionResult<ItemStack>(result, stack);
+      InteractionResult result = entry.getModifier().onToolUse(tool, entry.getLevel(), worldIn, playerIn, handIn);
+      if (result.consumesAction()) {
+        return new InteractionResultHolder<ItemStack>(result, stack);
       }
     }
-    return super.onItemRightClick(worldIn, playerIn, handIn);
+    return super.use(worldIn, playerIn, handIn);
   }
 
   @Override
-  public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+  public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
     ToolStack tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
       if (entry.getModifier().onFinishUsing(tool, entry.getLevel(), worldIn, entityLiving)) {
         return stack;
       }
     }
-    return super.onItemUseFinish(stack, worldIn, entityLiving);
+    return super.finishUsingItem(stack, worldIn, entityLiving);
   }
 
   @Override
-  public void onPlayerStoppedUsing(ItemStack stack, World worldIn, LivingEntity entityLiving, int timeLeft) {
+  public void releaseUsing(ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft) {
     ToolStack tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
       boolean result = entry.getModifier().onStoppedUsing(tool, entry.getLevel(), worldIn, entityLiving, timeLeft);
@@ -473,7 +473,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
         return;
       }
     }
-    super.onPlayerStoppedUsing(stack, worldIn, entityLiving, timeLeft);
+    super.releaseUsing(stack, worldIn, entityLiving, timeLeft);
   }
 
   @Override
@@ -489,24 +489,24 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public UseAction getUseAction(ItemStack stack) {
+  public UseAnim getUseAnimation(ItemStack stack) {
     ToolStack tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
-      UseAction result = entry.getModifier().getUseAction(tool, entry.getLevel());
-      if (result != UseAction.NONE) {
+      UseAnim result = entry.getModifier().getUseAction(tool, entry.getLevel());
+      if (result != UseAnim.NONE) {
         return result;
       }
     }
-     return super.getUseAction(stack);
+     return super.getUseAnimation(stack);
   }
 
   /* Information */
 
   @Override
   @OnlyIn(Dist.CLIENT)
-  public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-    CompoundNBT tag = stack.getTag();
-    boolean isAdvanced = flagIn == TooltipFlags.ADVANCED;
+  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+    CompoundTag tag = stack.getTag();
+    boolean isAdvanced = flagIn == Default.ADVANCED;
     // if the display tag is set, hide material info
     if (tag != null && tag.getBoolean(ToolBuildHandler.KEY_DISPLAY_TOOL)) {
       ToolStack tool = ToolStack.from(stack);
@@ -523,7 +523,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
       this.getTooltip(stack, tooltip, TooltipType.CONTROL, isAdvanced);
     } else {
       this.getTooltip(stack, tooltip, TooltipType.NORMAL, isAdvanced);
-      tooltip.add(StringTextComponent.EMPTY);
+      tooltip.add(TextComponent.EMPTY);
       tooltip.add(TOOLTIP_HOLD_SHIFT);
       tooltip.add(TOOLTIP_HOLD_CTRL);
     }
@@ -540,7 +540,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
    * @param tooltipType  the tooltip type to display
    * @param isAdvanced   if true, this is an advanced tooltip
    */
-  public void getTooltip(ItemStack stack, List<ITextComponent> tooltips, TooltipType tooltipType, boolean isAdvanced) {
+  public void getTooltip(ItemStack stack, List<Component> tooltips, TooltipType tooltipType, boolean isAdvanced) {
     switch (tooltipType) {
       case NORMAL: {
         ToolStack tool = ToolStack.from(stack);
@@ -563,7 +563,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
         ToolStack tool = ToolStack.from(stack);
         List<IMaterial> materials = tool.getMaterialsList();
         if (materials.isEmpty()) {
-          tooltips.add(new StringTextComponent("No tool data. NBT missing."));
+          tooltips.add(new TextComponent("No tool data. NBT missing."));
           return;
         }
 
@@ -576,10 +576,10 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
           IToolPart requirement = components.get(i);
           IMaterial material = materials.get(i);
           ItemStack partStack = requirement.withMaterial(material);
-          tooltips.add(partStack.getDisplayName().deepCopy().mergeStyle(TextFormatting.UNDERLINE).modifyStyle(style -> style.setColor(material.getColor())));
+          tooltips.add(partStack.getHoverName().copy().withStyle(ChatFormatting.UNDERLINE).withStyle(style -> style.withColor(material.getColor())));
           MaterialRegistry.getInstance().getMaterialStats(material.getIdentifier(), requirement.getStatType()).ifPresent(stat -> tooltips.addAll(stat.getLocalizedInfo()));
           if (i != max) {
-            tooltips.add(StringTextComponent.EMPTY);
+            tooltips.add(TextComponent.EMPTY);
           }
         }
         break;
@@ -588,12 +588,12 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public ITextComponent getLocalizedName() {
-    return new TranslationTextComponent(this.getTranslationKey());
+  public Component getLocalizedName() {
+    return new TranslatableComponent(this.getDescriptionId());
   }
 
   @Override
-  public List<ITextComponent> getInformation(ItemStack stack) {
+  public List<Component> getInformation(ItemStack stack) {
     return this.getStatInformation(ToolStack.from(stack), new ArrayList<>(), false, true);
   }
 
@@ -605,7 +605,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
    * @param detailed  If true, should show detailed info
    * @return the information for the given stack
    */
-  public List<ITextComponent> getStatInformation(ToolStack tool, List<ITextComponent> tooltip, boolean isAdvanced, boolean detailed) {
+  public List<Component> getStatInformation(ToolStack tool, List<Component> tooltip, boolean isAdvanced, boolean detailed) {
     TooltipBuilder builder = new TooltipBuilder(tool, tooltip);
     builder.addDurability();
     if (TinkerTags.Items.MELEE.contains(tool.getItem())) {
@@ -628,8 +628,8 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-    if (this.isInGroup(group)) {
+  public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
+    if (this.allowdedIn(group)) {
       this.addDefaultSubItems(items);
     }
   }
@@ -641,7 +641,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
       String showOnlyId = Config.COMMON.showOnlyToolMaterial.get();
       boolean added = false;
       if (!showOnlyId.isEmpty()) {
-        MaterialId materialId = MaterialId.tryCreate(showOnlyId);
+        MaterialId materialId = MaterialId.tryParse(showOnlyId);
         if (materialId != null) {
           IMaterial material = MaterialRegistry.getMaterial(materialId);
           if (material != IMaterial.UNKNOWN) {
@@ -718,7 +718,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   }
 
   @Override
-  public ITextComponent getDisplayName(ItemStack stack) {
+  public Component getName(ItemStack stack) {
     // if the tool is not named we use the repair tools for a prefix like thing
     List<IMaterial> materials = ToolStack.from(stack).getMaterialsList();
     List<IToolPart> components = getToolDefinition().getRequiredComponents();
@@ -733,7 +733,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
       }
     }
 
-    return ToolCore.getCombinedItemName(super.getDisplayName(stack), nameMaterials);
+    return ToolCore.getCombinedItemName(super.getName(stack), nameMaterials);
   }
 
   /**
@@ -743,7 +743,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
    * @param materials the list of materials
    * @return the combined item name
    */
-  public static ITextComponent getCombinedItemName(ITextComponent itemName, Collection<IMaterial> materials) {
+  public static Component getCombinedItemName(Component itemName, Collection<IMaterial> materials) {
     if (materials.isEmpty() || materials.stream().allMatch(IMaterial.UNKNOWN::equals)) {
       return itemName;
     }
@@ -752,26 +752,26 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
       IMaterial material = materials.iterator().next();
 
       if (Util.canTranslate(material.getTranslationKey() + ".format")) {
-        return new TranslationTextComponent(material.getTranslationKey() + ".format", itemName);
+        return new TranslatableComponent(material.getTranslationKey() + ".format", itemName);
       }
 
-      return new TranslationTextComponent(materials.iterator().next().getTranslationKey()).append(new StringTextComponent(" ")).append(itemName);
+      return new TranslatableComponent(materials.iterator().next().getTranslationKey()).append(new TextComponent(" ")).append(itemName);
     }
 
     // multiple materials. we'll have to combine
-    StringTextComponent name = new StringTextComponent("");
+    TextComponent name = new TextComponent("");
 
     Iterator<IMaterial> iter = materials.iterator();
 
     IMaterial material = iter.next();
-    name.append(new TranslationTextComponent(material.getTranslationKey()));
+    name.append(new TranslatableComponent(material.getTranslationKey()));
 
     while (iter.hasNext()) {
       material = iter.next();
-      name.appendString("-").append(new TranslationTextComponent(material.getTranslationKey()));
+      name.append("-").append(new TranslatableComponent(material.getTranslationKey()));
     }
 
-    name.appendString(" ").append(itemName);
+    name.append(" ").append(itemName);
 
     return name;
   }
@@ -792,7 +792,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
   /* NBT loading */
 
   @Override
-  public boolean updateItemStackNBT(CompoundNBT nbt) {
+  public boolean verifyTagAfterLoad(CompoundTag nbt) {
     // when the itemstack is loaded from NBT we recalculate all the data
     // stops things from being wrong if modifiers or materials change
     ToolStack tool = ToolStack.from(this, getToolDefinition(), nbt.getCompound("tag"));
@@ -813,8 +813,8 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
    *
    * @return  Raytrace
    */
-  public static BlockRayTraceResult blockRayTrace(World worldIn, PlayerEntity player, RayTraceContext.FluidMode fluidMode) {
-    return Item.rayTrace(worldIn, player, fluidMode);
+  public static BlockHitResult blockRayTrace(Level worldIn, Player player, ClipContext.Fluid fluidMode) {
+    return Item.getPlayerPOVHitResult(worldIn, player, fluidMode);
   }
 
   @Override
@@ -845,8 +845,8 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
     }
 
     // if the attributes changed, reequip
-    Multimap<Attribute, AttributeModifier> attributesNew = newStack.getAttributeModifiers(EquipmentSlotType.MAINHAND);
-    Multimap<Attribute, AttributeModifier> attributesOld = oldStack.getAttributeModifiers(EquipmentSlotType.MAINHAND);
+    Multimap<Attribute, AttributeModifier> attributesNew = newStack.getAttributeModifiers(EquipmentSlot.MAINHAND);
+    Multimap<Attribute, AttributeModifier> attributesOld = oldStack.getAttributeModifiers(EquipmentSlot.MAINHAND);
     if (attributesNew.size() != attributesOld.size()) {
       return true;
     }
@@ -868,7 +868,7 @@ public class ToolCore extends Item implements ITinkerStationDisplay, IModifiable
 
   @Nullable
   @Override
-  public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundNBT nbt) {
+  public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
     return new ToolCapabilityProvider(stack);
   }
 }

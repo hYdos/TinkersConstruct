@@ -1,12 +1,12 @@
 package slimeknights.tconstruct;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.IItemProvider;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.data.ExistingFileHelper;
@@ -200,7 +200,7 @@ public class TConstruct {
         // removed ancient heads, use netherite directly
         case "ancient_axe_head": case "ancient_shovel_head": case "ancient_hoe_head": return Items.NETHERITE_SCRAP;
       }
-      IItemProvider block = missingBlock(name);
+      ItemLike block = missingBlock(name);
       return block == null ? null : block.asItem();
     });
   }

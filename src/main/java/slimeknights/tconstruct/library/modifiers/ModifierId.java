@@ -1,9 +1,8 @@
 package slimeknights.tconstruct.library.modifiers;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.ResourceLocationException;
-
 import javax.annotation.Nullable;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * This is just a copy of ResourceLocation for type safety.
@@ -28,7 +27,7 @@ public class ModifierId extends ResourceLocation {
    * @return  Material ID, or null if invalid
    */
   @Nullable
-  public static ModifierId tryCreate(String string) {
+  public static ModifierId tryParse(String string) {
     try {
       return new ModifierId(string);
     } catch (ResourceLocationException resourcelocationexception) {

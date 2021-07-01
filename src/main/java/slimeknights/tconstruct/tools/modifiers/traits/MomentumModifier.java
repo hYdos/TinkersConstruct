@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.tools.modifiers.traits;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import slimeknights.tconstruct.library.modifiers.Modifier;
 import slimeknights.tconstruct.library.tools.helper.ToolHarvestContext;

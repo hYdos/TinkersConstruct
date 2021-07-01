@@ -1,6 +1,6 @@
 package slimeknights.tconstruct.library.exception;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import slimeknights.tconstruct.library.TinkerAPIException;
 import slimeknights.tconstruct.library.materials.IMaterial;
 

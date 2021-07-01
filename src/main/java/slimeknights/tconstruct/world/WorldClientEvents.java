@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.world;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.color.item.ItemColors;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.client.renderer.color.BlockColors;
-import net.minecraft.client.renderer.color.ItemColors;
 import net.minecraft.client.renderer.entity.SlimeRenderer;
-import net.minecraft.resources.IReloadableResourceManager;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
@@ -32,16 +32,16 @@ public class WorldClientEvents extends ClientEventBase {
   /**
    * Called by TinkerClient to add the resource listeners, runs during constructor
    */
-  public static void addResourceListener(IReloadableResourceManager manager) {
+  public static void addResourceListener(ReloadableResourceManager manager) {
     for (SlimeType type : SlimeType.values()) {
-      manager.addReloadListener(new SlimeColorReloadListener(type));
+      manager.registerReloadListener(new SlimeColorReloadListener(type));
     }
   }
 
   @SubscribeEvent
   static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
-    Minecraft.getInstance().particles.registerFactory(TinkerWorld.skySlimeParticle.get(), new SlimeParticle.Factory(SlimeType.SKY));
-    Minecraft.getInstance().particles.registerFactory(TinkerWorld.enderSlimeParticle.get(), new SlimeParticle.Factory(SlimeType.ENDER));
+    Minecraft.getInstance().particleEngine.register(TinkerWorld.skySlimeParticle.get(), new SlimeParticle.Factory(SlimeType.SKY));
+    Minecraft.getInstance().particleEngine.register(TinkerWorld.enderSlimeParticle.get(), new SlimeParticle.Factory(SlimeType.ENDER));
   }
 
   @SubscribeEvent
@@ -50,39 +50,39 @@ public class WorldClientEvents extends ClientEventBase {
     RenderingRegistry.registerEntityRenderingHandler(TinkerWorld.skySlimeEntity.get(), TinkerSlimeRenderer.SKY_SLIME_FACTORY);
     RenderingRegistry.registerEntityRenderingHandler(TinkerWorld.enderSlimeEntity.get(), TinkerSlimeRenderer.ENDER_SLIME_FACTORY);
 
-    RenderType cutout = RenderType.getCutout();
-    RenderType cutoutMipped = RenderType.getCutoutMipped();
+    RenderType cutout = RenderType.cutout();
+    RenderType cutoutMipped = RenderType.cutoutMipped();
 
     // render types - slime plants
     for (SlimeType type : SlimeType.values()) {
       if (type != SlimeType.BLOOD) {
-        RenderTypeLookup.setRenderLayer(TinkerWorld.slimeLeaves.get(type), cutoutMipped);
+        ItemBlockRenderTypes.setRenderLayer(TinkerWorld.slimeLeaves.get(type), cutoutMipped);
       }
-      RenderTypeLookup.setRenderLayer(TinkerWorld.vanillaSlimeGrass.get(type), cutoutMipped);
-      RenderTypeLookup.setRenderLayer(TinkerWorld.earthSlimeGrass.get(type), cutoutMipped);
-      RenderTypeLookup.setRenderLayer(TinkerWorld.skySlimeGrass.get(type), cutoutMipped);
-      RenderTypeLookup.setRenderLayer(TinkerWorld.enderSlimeGrass.get(type), cutoutMipped);
-      RenderTypeLookup.setRenderLayer(TinkerWorld.ichorSlimeGrass.get(type), cutoutMipped);
-      RenderTypeLookup.setRenderLayer(TinkerWorld.slimeFern.get(type), cutout);
-      RenderTypeLookup.setRenderLayer(TinkerWorld.slimeTallGrass.get(type), cutout);
-      RenderTypeLookup.setRenderLayer(TinkerWorld.slimeSapling.get(type), cutout);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.vanillaSlimeGrass.get(type), cutoutMipped);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.earthSlimeGrass.get(type), cutoutMipped);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.skySlimeGrass.get(type), cutoutMipped);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.enderSlimeGrass.get(type), cutoutMipped);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.ichorSlimeGrass.get(type), cutoutMipped);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.slimeFern.get(type), cutout);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.slimeTallGrass.get(type), cutout);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.slimeSapling.get(type), cutout);
     }
-    RenderTypeLookup.setRenderLayer(TinkerWorld.enderSlimeVine.get(), cutout);
-    RenderTypeLookup.setRenderLayer(TinkerWorld.skySlimeVine.get(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.enderSlimeVine.get(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.skySlimeVine.get(), cutout);
 
     // render types - slime blocks
-    RenderType translucent = RenderType.getTranslucent();
+    RenderType translucent = RenderType.translucent();
     for (SlimeType type : SlimeType.TINKER) {
-      RenderTypeLookup.setRenderLayer(TinkerWorld.slime.get(type), translucent);
+      ItemBlockRenderTypes.setRenderLayer(TinkerWorld.slime.get(type), translucent);
     }
 
     // doors
-    RenderTypeLookup.setRenderLayer(TinkerWorld.greenheart.getDoor(), cutout);
-    RenderTypeLookup.setRenderLayer(TinkerWorld.greenheart.getTrapdoor(), cutout);
-    RenderTypeLookup.setRenderLayer(TinkerWorld.skyroot.getDoor(), cutout);
-    RenderTypeLookup.setRenderLayer(TinkerWorld.skyroot.getTrapdoor(), cutout);
-    RenderTypeLookup.setRenderLayer(TinkerWorld.bloodshroom.getDoor(), cutout);
-    RenderTypeLookup.setRenderLayer(TinkerWorld.bloodshroom.getTrapdoor(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.greenheart.getDoor(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.greenheart.getTrapdoor(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.skyroot.getDoor(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.skyroot.getTrapdoor(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.bloodshroom.getDoor(), cutout);
+    ItemBlockRenderTypes.setRenderLayer(TinkerWorld.bloodshroom.getTrapdoor(), cutout);
   }
 
   @SubscribeEvent
@@ -142,7 +142,7 @@ public class WorldClientEvents extends ClientEventBase {
       return SlimeColorizer.getColorStatic(type);
     }
     if (add != null) {
-      pos = pos.add(add);
+      pos = pos.offset(add);
     }
 
     return SlimeColorizer.getColorForPos(pos, type);

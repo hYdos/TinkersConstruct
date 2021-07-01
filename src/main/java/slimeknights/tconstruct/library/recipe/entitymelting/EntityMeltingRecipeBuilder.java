@@ -2,9 +2,8 @@ package slimeknights.tconstruct.library.recipe.entitymelting;
 
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraftforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.EntityIngredient;
 import slimeknights.mantle.recipe.RecipeHelper;
@@ -28,12 +27,12 @@ public class EntityMeltingRecipeBuilder extends AbstractRecipeBuilder<EntityMelt
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer) {
     build(consumer, Objects.requireNonNull(output.getFluid().getRegistryName()));
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer, ResourceLocation id) {
     ResourceLocation advancementId = this.buildOptionalAdvancement(id, "entity_melting");
     consumer.accept(new FinishedRecipe(id, advancementId));
   }
@@ -44,14 +43,14 @@ public class EntityMeltingRecipeBuilder extends AbstractRecipeBuilder<EntityMelt
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
       json.add("entity", ingredient.serialize());
       json.add("result", RecipeHelper.serializeFluidStack(output));
       json.addProperty("damage", damage);
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return TinkerSmeltery.entityMeltingSerializer.get();
     }
   }

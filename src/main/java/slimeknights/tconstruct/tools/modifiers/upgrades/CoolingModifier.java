@@ -1,11 +1,11 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.util.text.ITextComponent;
 import slimeknights.tconstruct.library.modifiers.IncrementalModifier;
 import slimeknights.tconstruct.library.tools.helper.ToolAttackContext;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
 
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class CoolingModifier extends IncrementalModifier {
   public CoolingModifier() {
@@ -21,7 +21,7 @@ public class CoolingModifier extends IncrementalModifier {
   }
 
   @Override
-  public void addInformation(IModifierToolStack tool, int level, List<ITextComponent> tooltip, boolean isAdvanced, boolean detailed) {
+  public void addInformation(IModifierToolStack tool, int level, List<Component> tooltip, boolean isAdvanced, boolean detailed) {
     ScaledTypeDamageModifier.addDamageTooltip(this, tool, level, 2f, tooltip);
   }
 }

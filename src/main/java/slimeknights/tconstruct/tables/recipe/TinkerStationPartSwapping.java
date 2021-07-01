@@ -2,11 +2,11 @@ package slimeknights.tconstruct.tables.recipe;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.Level;
 import slimeknights.tconstruct.library.MaterialRegistry;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.materials.IMaterial;
@@ -38,7 +38,7 @@ public class TinkerStationPartSwapping implements ITinkerStationRecipe {
   protected final ResourceLocation id;
 
   @Override
-  public boolean matches(ITinkerStationInventory inv, World world) {
+  public boolean matches(ITinkerStationInventory inv, Level world) {
     ItemStack tinkerable = inv.getTinkerableStack();
     if (tinkerable.isEmpty() || !(tinkerable.getItem() instanceof ToolCore)) {
       return false;
@@ -68,7 +68,7 @@ public class TinkerStationPartSwapping implements ITinkerStationRecipe {
   /** @deprecated Use {@link #getCraftingResult(ITinkerStationInventory)}  */
   @Deprecated
   @Override
-  public ItemStack getRecipeOutput() {
+  public ItemStack getResultItem() {
     return ItemStack.EMPTY;
   }
 
@@ -154,7 +154,7 @@ public class TinkerStationPartSwapping implements ITinkerStationRecipe {
   }
 
   @Override
-  public IRecipeSerializer<?> getSerializer() {
+  public RecipeSerializer<?> getSerializer() {
     return TinkerTables.tinkerStationPartSwappingSerializer.get();
   }
 }

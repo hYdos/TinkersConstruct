@@ -11,12 +11,12 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import lombok.extern.log4j.Log4j2;
-import net.minecraft.client.resources.JsonReloadListener;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.Color;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.common.crafting.conditions.ICondition;
 import slimeknights.tconstruct.library.Util;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * So if your mods name is "foobar", the location for your mods materials is "data/foobar/materials".
  */
 @Log4j2
-public class MaterialManager extends JsonReloadListener {
+public class MaterialManager extends SimpleJsonResourceReloadListener {
   public static final String FOLDER = "materials/definition";
   public static final Gson GSON = (new GsonBuilder())
     .registerTypeAdapter(ResourceLocation.class, new ResourceLocation.Serializer())
@@ -119,7 +119,7 @@ public class MaterialManager extends JsonReloadListener {
   }
 
   @Override
-  protected void apply(Map<ResourceLocation, JsonElement> splashList, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+  protected void apply(Map<ResourceLocation, JsonElement> splashList, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
     this.materials = splashList.entrySet().stream()
       .filter(entry -> entry.getValue().isJsonObject())
       .map(entry -> loadMaterial(entry.getKey(), entry.getValue().getAsJsonObject()))
@@ -166,9 +166,9 @@ public class MaterialManager extends JsonReloadListener {
       boolean hidden = Boolean.TRUE.equals(materialJson.getHidden());
 
       // parse color from string
-      Color color = Optional.ofNullable(materialJson.getTextColor())
+      TextColor color = Optional.ofNullable(materialJson.getTextColor())
                             .filter(str -> !str.isEmpty())
-                            .map(Color::fromHex)
+                            .map(TextColor::parseColor)
                             .orElse(Material.WHITE);
 
 
@@ -183,7 +183,7 @@ public class MaterialManager extends JsonReloadListener {
   private static class ConditionSerializer implements JsonDeserializer<ICondition>, JsonSerializer<ICondition> {
     @Override
     public ICondition deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
-      return CraftingHelper.getCondition(JSONUtils.getJsonObject(json, "condition"));
+      return CraftingHelper.getCondition(GsonHelper.convertToJsonObject(json, "condition"));
     }
 
     @Override

@@ -1,11 +1,11 @@
 package slimeknights.tconstruct.smeltery.tileentity;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.DistExecutor;
@@ -54,10 +54,10 @@ public interface ITankTileEntity extends IFluidTankUpdater, FluidUpdatePacket.IF
   @Override
   default void onTankContentsChanged() {
     int newStrength = this.comparatorStrength();
-    TileEntity te = getTE();
-    World world = te.getWorld();
+    BlockEntity te = getTE();
+    Level world = te.getLevel();
     if (newStrength != getLastStrength() && world != null) {
-      world.notifyNeighborsOfStateChange(te.getPos(), te.getBlockState().getBlock());
+      world.updateNeighborsAt(te.getBlockPos(), te.getBlockState().getBlock());
       setLastStrength(newStrength);
     }
   }
@@ -86,11 +86,11 @@ public interface ITankTileEntity extends IFluidTankUpdater, FluidUpdatePacket.IF
     DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
       if (isFluidInModel()) {
         // if the amount change is bigger than a single increment, or we changed whether we have a fluid, update the world renderer
-        TileEntity te = getTE();
+        BlockEntity te = getTE();
         TankModel.BakedModel<?> model = ModelHelper.getBakedModel(te.getBlockState(), TankModel.BakedModel.class);
         if (model != null && (Math.abs(newAmount - oldAmount) >= (tank.getCapacity() / model.getFluid().getIncrements()) || (oldAmount == 0) != (newAmount == 0))) {
           //this.requestModelDataUpdate();
-          Minecraft.getInstance().worldRenderer.notifyBlockUpdate(null, te.getPos(), null, null, 3);
+          Minecraft.getInstance().levelRenderer.blockChanged(null, te.getBlockPos(), null, null, 3);
         }
       }
     });
@@ -101,8 +101,8 @@ public interface ITankTileEntity extends IFluidTankUpdater, FluidUpdatePacket.IF
    */
 
   /** @return tile entity world */
-  default TileEntity getTE() {
-    return (TileEntity) this;
+  default BlockEntity getTE() {
+    return (BlockEntity) this;
   }
 
   /*
@@ -110,13 +110,13 @@ public interface ITankTileEntity extends IFluidTankUpdater, FluidUpdatePacket.IF
    */
 
   /**
-   * Implements logic for {@link net.minecraft.block.Block#getComparatorInputOverride(BlockState, World, BlockPos)}
+   * Implements logic for {@link net.minecraft.world.level.block.Block#getAnalogOutputSignal(BlockState, Level, BlockPos)}
    * @param world  World instance
    * @param pos    Block position
    * @return  Comparator power
    */
-  static int getComparatorInputOverride(IWorld world, BlockPos pos) {
-    TileEntity te = world.getTileEntity(pos);
+  static int getComparatorInputOverride(LevelAccessor world, BlockPos pos) {
+    BlockEntity te = world.getBlockEntity(pos);
     if (!(te instanceof ITankTileEntity)) {
       return 0;
     }

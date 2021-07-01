@@ -3,13 +3,11 @@ package slimeknights.tconstruct.tools.recipe;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.Level;
 import slimeknights.mantle.recipe.RecipeSerializer;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.mantle.util.JsonHelper;
@@ -42,7 +40,7 @@ public class ModifierRemovalRecipe implements ITinkerStationRecipe {
   private final ItemStack container;
 
   @Override
-  public boolean matches(ITinkerStationInventory inv, World world) {
+  public boolean matches(ITinkerStationInventory inv, Level world) {
     if (!TinkerTags.Items.MODIFIABLE.contains(inv.getTinkerableStack().getItem())) {
       return false;
     }
@@ -126,20 +124,20 @@ public class ModifierRemovalRecipe implements ITinkerStationRecipe {
   /** @deprecated Use {@link #getValidatedResult(ITinkerStationInventory)} */
   @Deprecated
   @Override
-  public ItemStack getRecipeOutput() {
+  public ItemStack getResultItem() {
     return ItemStack.EMPTY;
   }
 
   @Override
-  public IRecipeSerializer<?> getSerializer() {
+  public net.minecraft.world.item.crafting.RecipeSerializer<?> getSerializer() {
     return TinkerModifiers.removeModifierSerializer.get();
   }
 
   public static class Serializer extends RecipeSerializer<ModifierRemovalRecipe> {
 
     @Override
-    public ModifierRemovalRecipe read(ResourceLocation id, JsonObject json) {
-      Ingredient ingredient = Ingredient.deserialize(JsonHelper.getElement(json, "ingredient"));
+    public ModifierRemovalRecipe fromJson(ResourceLocation id, JsonObject json) {
+      Ingredient ingredient = Ingredient.fromJson(JsonHelper.getElement(json, "ingredient"));
       ItemStack container = ItemStack.EMPTY;
       if (json.has("container")) {
         container = IncrementalModifierRecipe.deseralizeResultItem(json, "container");
@@ -149,16 +147,16 @@ public class ModifierRemovalRecipe implements ITinkerStationRecipe {
 
     @Nullable
     @Override
-    public ModifierRemovalRecipe read(ResourceLocation id, PacketBuffer buffer) {
-      Ingredient ingredient = Ingredient.read(buffer);
-      ItemStack container = buffer.readItemStack();
+    public ModifierRemovalRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
+      Ingredient ingredient = Ingredient.fromNetwork(buffer);
+      ItemStack container = buffer.readItem();
       return new ModifierRemovalRecipe(id, ingredient, container);
     }
 
     @Override
-    public void write(PacketBuffer buffer, ModifierRemovalRecipe recipe) {
-      recipe.ingredient.write(buffer);
-      buffer.writeItemStack(recipe.container);
+    public void write(FriendlyByteBuf buffer, ModifierRemovalRecipe recipe) {
+      recipe.ingredient.toNetwork(buffer);
+      buffer.writeItem(recipe.container);
     }
   }
 
@@ -168,12 +166,12 @@ public class ModifierRemovalRecipe implements ITinkerStationRecipe {
     private final ItemStack container;
 
     @Override
-    public void build(Consumer<IFinishedRecipe> consumer) {
+    public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer) {
       build(consumer, Objects.requireNonNull(container.getItem().getRegistryName()));
     }
 
     @Override
-    public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+    public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer, ResourceLocation id) {
       if (ingredient == Ingredient.EMPTY) {
         throw new IllegalStateException("Empty ingredient not allowed");
       }
@@ -187,15 +185,15 @@ public class ModifierRemovalRecipe implements ITinkerStationRecipe {
       }
 
       @Override
-      public void serialize(JsonObject json) {
-        json.add("ingredient", ingredient.serialize());
+      public void serializeRecipeData(JsonObject json) {
+        json.add("ingredient", ingredient.toJson());
         if (!container.isEmpty()) {
           json.add("container", IncrementalModifierRecipeBuilder.serializeResult(container));
         }
       }
 
       @Override
-      public IRecipeSerializer<?> getSerializer() {
+      public net.minecraft.world.item.crafting.RecipeSerializer<?> getType() {
         return TinkerModifiers.removeModifierSerializer.get();
       }
     }

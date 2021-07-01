@@ -1,9 +1,9 @@
 package slimeknights.tconstruct.smeltery.tileentity.module;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.IIntArray;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -297,12 +297,12 @@ public class MeltingModuleInventory implements IItemHandlerModifiable {
    * Writes this module to NBT
    * @return  Module in NBT
    */
-  public CompoundNBT writeToNBT() {
-    CompoundNBT nbt = new CompoundNBT();
-    ListNBT list = new ListNBT();
+  public CompoundTag writeToNBT() {
+    CompoundTag nbt = new CompoundTag();
+    ListTag list = new ListTag();
     for (int i = 0; i < modules.length; i++) {
       if (modules[i] != null && !modules[i].getStack().isEmpty()) {
-        CompoundNBT moduleNBT = modules[i].writeToNBT();
+        CompoundTag moduleNBT = modules[i].writeToNBT();
         moduleNBT.putByte(TAG_SLOT, (byte)i);
         list.add(moduleNBT);
       }
@@ -318,7 +318,7 @@ public class MeltingModuleInventory implements IItemHandlerModifiable {
    * Reads this inventory from NBT
    * @param nbt  NBT compound
    */
-  public void readFromNBT(CompoundNBT nbt) {
+  public void readFromNBT(CompoundTag nbt) {
     if (!strictSize) {
       int newSize = nbt.getByte(TAG_SIZE) & 255;
       if (newSize != modules.length) {
@@ -332,9 +332,9 @@ public class MeltingModuleInventory implements IItemHandlerModifiable {
       }
     }
 
-    ListNBT list = nbt.getList(TAG_ITEMS, NBT.TAG_COMPOUND);
+    ListTag list = nbt.getList(TAG_ITEMS, NBT.TAG_COMPOUND);
     for (int i = 0; i < list.size(); i++) {
-      CompoundNBT item = list.getCompound(i);
+      CompoundTag item = list.getCompound(i);
       if (item.contains(TAG_SLOT, NBT.TAG_BYTE)) {
         int slot = item.getByte(TAG_SLOT) & 255;
         if (validSlot(slot)) {
@@ -351,7 +351,7 @@ public class MeltingModuleInventory implements IItemHandlerModifiable {
    * Sets up all sub slots for tracking
    * @param consumer  IIntArray consumer
    */
-  public void trackInts(Consumer<IIntArray> consumer) {
+  public void trackInts(Consumer<ContainerData> consumer) {
     for (int i = 0; i < getSlots(); i++) {
       consumer.accept(getModule(i));
     }

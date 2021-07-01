@@ -3,11 +3,11 @@ package slimeknights.tconstruct.library.book.content;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.Lazy;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 
 @OnlyIn(Dist.CLIENT)
 public class ContentMaterial extends TinkerPage {
-  private static final ITextComponent PART_BUILDER = Util.makeTranslation("book", "material.part_builder");
+  private static final Component PART_BUILDER = Util.makeTranslation("book", "material.part_builder");
   private static final String CAST_FROM = Util.makeTranslationKey("book", "material.cast_from");
   private static final String COMPOSITE_FROM = Util.makeTranslationKey("book", "material.composite_from");
 
@@ -77,7 +77,7 @@ public class ContentMaterial extends TinkerPage {
   public void build(BookData book, ArrayList<BookElement> list, boolean rightSide) {
     IMaterial material = this.material.get();
 
-    this.addTitle(list, new TranslationTextComponent(material.getTranslationKey()).getString(), true, material.getColor().getColor());
+    this.addTitle(list, new TranslatableComponent(material.getTranslationKey()).getString(), true, material.getColor().getValue());
 
     // the cool tools to the left/right
     this.addDisplayItems(list, rightSide ? BookScreen.PAGE_WIDTH - 18 : 0, material.getIdentifier());
@@ -158,7 +158,7 @@ public class ContentMaterial extends TinkerPage {
       if (stats.getLocalizedDescriptions().get(i).getString().isEmpty()) {
         text.tooltips = null;
       } else {
-        text.tooltips = new ITextComponent[]{stats.getLocalizedDescriptions().get(i)};
+        text.tooltips = new Component[]{stats.getLocalizedDescriptions().get(i)};
       }
 
       lineData.add(text);
@@ -175,22 +175,22 @@ public class ContentMaterial extends TinkerPage {
       Modifier mod = trait.getModifier();
       TextComponentData textComponentData = new TextComponentData(mod.getDisplayName());
 
-      List<ITextComponent> textComponents = mod.getDescriptionList();
-      List<ITextComponent> formatted = new ArrayList<>();
+      List<Component> textComponents = mod.getDescriptionList();
+      List<Component> formatted = new ArrayList<>();
 
 
       for (int index = 0; index < textComponents.size(); index++) {
-        ITextComponent textComponent = textComponents.get(index);
+        Component textComponent = textComponents.get(index);
 
         if (index == 0) {
-          formatted.add(textComponent.deepCopy().modifyStyle(style -> style.setColor(material.getColor())));
+          formatted.add(textComponent.copy().withStyle(style -> style.withColor(material.getColor())));
         } else {
           formatted.add(textComponent);
         }
       }
 
-      textComponentData.tooltips = formatted.toArray(new ITextComponent[0]);
-      textComponentData.text = textComponentData.text.deepCopy().mergeStyle(TextFormatting.DARK_GRAY).mergeStyle(TextFormatting.UNDERLINE);
+      textComponentData.tooltips = formatted.toArray(new Component[0]);
+      textComponentData.text = textComponentData.text.copy().withStyle(ChatFormatting.DARK_GRAY).withStyle(ChatFormatting.UNDERLINE);
 
       lineData.add(textComponentData);
       lineData.add(new TextComponentData("\n"));
@@ -219,12 +219,12 @@ public class ContentMaterial extends TinkerPage {
     List<MaterialFluidRecipe> fluids = MaterialCastingLookup.getCastingFluids(materialId);
     if (!fluids.isEmpty()) {
       ItemElement elementItem = new TinkerItemElement(0, 0, 1, fluids.stream().flatMap(recipe -> recipe.getFluids().stream())
-                                                                     .map(fluid -> new ItemStack(fluid.getFluid().getFilledBucket()))
+                                                                     .map(fluid -> new ItemStack(fluid.getFluid().getBucket()))
                                                                      .collect(Collectors.toList()));
       FluidStack firstFluid = fluids.stream()
                                     .flatMap(recipe -> recipe.getFluids().stream())
                                     .findFirst().orElse(FluidStack.EMPTY);
-      elementItem.tooltip = ImmutableList.of(new TranslationTextComponent(CAST_FROM, firstFluid.getFluid().getAttributes().getDisplayName(firstFluid)));
+      elementItem.tooltip = ImmutableList.of(new TranslatableComponent(CAST_FROM, firstFluid.getFluid().getAttributes().getDisplayName(firstFluid)));
       displayTools.add(elementItem);
     }
     // composite casting
@@ -238,15 +238,15 @@ public class ContentMaterial extends TinkerPage {
                                                                                       .map(part -> part.withMaterial(input))
                                                                                       .collect(Collectors.toList()));
         FluidStack firstFluid = composite.getFluids().stream().findFirst().orElse(FluidStack.EMPTY);
-        elementItem.tooltip = ImmutableList.of(new TranslationTextComponent(COMPOSITE_FROM,
+        elementItem.tooltip = ImmutableList.of(new TranslatableComponent(COMPOSITE_FROM,
                                                                             firstFluid.getFluid().getAttributes().getDisplayName(firstFluid),
-                                                                            new TranslationTextComponent(input.getTranslationKey())));
+                                                                            new TranslatableComponent(input.getTranslationKey())));
         displayTools.add(elementItem);
       }
     }
 
     int y = 10;
-    for (Item tool : TinkerTags.Items.MULTIPART_TOOL.getAllElements()) {
+    for (Item tool : TinkerTags.Items.MULTIPART_TOOL.getValues()) {
       if (tool instanceof ToolCore) {
         List<IToolPart> requirements = ((ToolCore) tool).getToolDefinition().getRequiredComponents();
         List<IMaterial> materials = new ArrayList<>(requirements.size());
@@ -278,7 +278,7 @@ public class ContentMaterial extends TinkerPage {
   }
 
   public List<IToolPart> getToolParts() {
-    return TinkerTags.Items.TOOL_PARTS.getAllElements().stream().filter(item -> item instanceof IToolPart).map(item -> (IToolPart) item).collect(Collectors.toList());
+    return TinkerTags.Items.TOOL_PARTS.getValues().stream().filter(item -> item instanceof IToolPart).map(item -> (IToolPart) item).collect(Collectors.toList());
   }
 
 }

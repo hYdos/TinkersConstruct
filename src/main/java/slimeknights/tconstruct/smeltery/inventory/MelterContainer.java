@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.smeltery.inventory;
 
 import lombok.Getter;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IntReferenceHolder;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.CapabilityItemHandler;
 import slimeknights.mantle.inventory.BaseContainer;
 import slimeknights.mantle.inventory.ItemHandlerSlot;
@@ -26,7 +26,7 @@ public class MelterContainer extends BaseContainer<MelterTileEntity> {
   private final Slot[] inputs;
   @Getter
   private boolean hasFuelSlot = false;
-  public MelterContainer(int id, @Nullable PlayerInventory inv, @Nullable MelterTileEntity melter) {
+  public MelterContainer(int id, @Nullable Inventory inv, @Nullable MelterTileEntity melter) {
     super(TinkerSmeltery.melterContainer.get(), id, inv, melter);
 
     // create slots
@@ -38,10 +38,10 @@ public class MelterContainer extends BaseContainer<MelterTileEntity> {
       }
 
       // add fuel slot if present, we only add for the melter though
-      World world = melter.getWorld();
-      BlockPos down = melter.getPos().down();
-      if (world != null && world.getBlockState(down).isIn(TinkerTags.Blocks.FUEL_TANKS)) {
-        TileEntity te = world.getTileEntity(down);
+      Level world = melter.getLevel();
+      BlockPos down = melter.getBlockPos().below();
+      if (world != null && world.getBlockState(down).is(TinkerTags.Blocks.FUEL_TANKS)) {
+        BlockEntity te = world.getBlockEntity(down);
         if (te != null) {
           hasFuelSlot = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).filter(handler -> {
             this.addSlot(new ItemHandlerSlot(handler, 0, 151, 32));
@@ -53,7 +53,7 @@ public class MelterContainer extends BaseContainer<MelterTileEntity> {
       this.addInventorySlots();
 
       // syncing
-      Consumer<IntReferenceHolder> referenceConsumer = this::trackInt;
+      Consumer<DataSlot> referenceConsumer = this::addDataSlot;
       ValidZeroIntReference.trackIntArray(referenceConsumer, melter.getFuelModule());
       inventory.trackInts(array -> ValidZeroIntReference.trackIntArray(referenceConsumer, array));
     } else {
@@ -61,7 +61,7 @@ public class MelterContainer extends BaseContainer<MelterTileEntity> {
     }
   }
 
-  public MelterContainer(int id, PlayerInventory inv, PacketBuffer buf) {
+  public MelterContainer(int id, Inventory inv, FriendlyByteBuf buf) {
     this(id, inv, getTileEntityFromBuf(buf, MelterTileEntity.class));
   }
 }

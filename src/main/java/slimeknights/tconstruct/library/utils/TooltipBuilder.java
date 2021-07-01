@@ -2,13 +2,13 @@ package slimeknights.tconstruct.library.utils;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.player.Player;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.client.renderer.font.CustomFontColor;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
@@ -26,16 +26,16 @@ public class TooltipBuilder {
   private final static String KEY_FREE_UPGRADES = Util.makeTranslationKey("tooltip", "tool.upgrades");
   private final static String KEY_FREE_ABILITIES = Util.makeTranslationKey("tooltip", "tool.abilities");
 
-  private final static Color UPGRADE_COLOR = Color.fromInt(0xFFCCBA47);
-  private final static Color ABILITY_COLOR = Color.fromInt(0xFFB8A0FF);
+  private final static TextColor UPGRADE_COLOR = TextColor.fromRgb(0xFFCCBA47);
+  private final static TextColor ABILITY_COLOR = TextColor.fromRgb(0xFFB8A0FF);
   /** Formatted broken string */
-  private static final ITextComponent TOOLTIP_BROKEN = Util.makeTranslation("tooltip", "tool.broken").mergeStyle(TextFormatting.BOLD, TextFormatting.DARK_RED);
+  private static final Component TOOLTIP_BROKEN = Util.makeTranslation("tooltip", "tool.broken").withStyle(ChatFormatting.BOLD, ChatFormatting.DARK_RED);
   /** Prefixed broken string */
-  private static final ITextComponent TOOLTIP_BROKEN_PREFIXED = ToolStats.DURABILITY.getPrefix().append(TOOLTIP_BROKEN);
+  private static final Component TOOLTIP_BROKEN_PREFIXED = ToolStats.DURABILITY.getPrefix().append(TOOLTIP_BROKEN);
 
   private final ToolStack tool;
   @Getter
-  private final List<ITextComponent> tooltips;
+  private final List<Component> tooltips;
 
   public TooltipBuilder(ToolStack tool) {
     this.tool = tool;
@@ -48,7 +48,7 @@ public class TooltipBuilder {
    * @param textComponent the text component to add
    * @return the tooltip builder
    */
-  public TooltipBuilder add(ITextComponent textComponent) {
+  public TooltipBuilder add(Component textComponent) {
     this.tooltips.add(textComponent);
 
     return this;
@@ -66,7 +66,7 @@ public class TooltipBuilder {
   }
 
   /** Applies formatting for durability with a reference durability */
-  public static ITextComponent formatDurability(int durability, int ref, boolean textIfBroken) {
+  public static Component formatDurability(int durability, int ref, boolean textIfBroken) {
     if (textIfBroken && durability == 0) {
       return TOOLTIP_BROKEN_PREFIXED;
     }
@@ -91,9 +91,9 @@ public class TooltipBuilder {
    */
   public TooltipBuilder addWithAttribute(IToolStat<?> stat, Attribute attribute) {
     float damage = (float) attribute.getDefaultValue();
-    PlayerEntity player = Minecraft.getInstance().player;
+    Player player = Minecraft.getInstance().player;
     if (player != null) {
-      ModifiableAttributeInstance instance = player.getAttribute(attribute);
+      AttributeInstance instance = player.getAttribute(attribute);
       if (instance != null) {
         damage = (float) instance.getBaseValue();
       }

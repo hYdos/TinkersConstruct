@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.world.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SlimeBlock;
+import net.minecraft.world.level.block.SlimeBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import slimeknights.tconstruct.world.TinkerWorld;
 
 /** Slime block that only sticks to other slime blocks */

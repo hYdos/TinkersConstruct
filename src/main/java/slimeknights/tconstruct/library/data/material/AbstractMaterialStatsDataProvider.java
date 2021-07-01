@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.AllArgsConstructor;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.DirectoryCache;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.HashCache;
+import net.minecraft.resources.ResourceLocation;
 import slimeknights.tconstruct.library.data.GenericDataProvider;
 import slimeknights.tconstruct.library.materials.MaterialId;
 import slimeknights.tconstruct.library.materials.json.MaterialStatJson;
@@ -42,7 +42,7 @@ public abstract class AbstractMaterialStatsDataProvider extends GenericDataProvi
   protected abstract void addMaterialStats();
 
   @Override
-  public void act(DirectoryCache cache) {
+  public void run(HashCache cache) {
     addMaterialStats();
 
     // ensure we have stats for all materials

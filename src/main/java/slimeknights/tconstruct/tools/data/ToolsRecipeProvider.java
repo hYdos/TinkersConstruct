@@ -1,14 +1,14 @@
 package slimeknights.tconstruct.tools.data;
 
-import net.minecraft.block.Blocks;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.tags.ITag;
+import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.ItemOutput;
@@ -52,13 +52,13 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
   }
 
   @Override
-  protected void registerRecipes(Consumer<IFinishedRecipe> consumer) {
+  protected void buildShapelessRecipes(Consumer<FinishedRecipe> consumer) {
     this.addMaterialsRecipes(consumer);
     this.addPartRecipes(consumer);
     this.addTinkerStationRecipes(consumer);
   }
 
-  private void addPartRecipes(Consumer<IFinishedRecipe> consumer) {
+  private void addPartRecipes(Consumer<FinishedRecipe> consumer) {
     addPartRecipe(consumer, TinkerToolParts.repairKit, 2, TinkerSmeltery.repairKitCast);
     // head
     addPartRecipe(consumer, TinkerToolParts.pickaxeHead, 2, TinkerSmeltery.pickaxeHeadCast);
@@ -74,36 +74,36 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
     addPartRecipe(consumer, TinkerToolParts.toughHandle, 3, TinkerSmeltery.toughHandleCast);
   }
 
-  private void addMaterialsRecipes(Consumer<IFinishedRecipe> consumer) {
+  private void addMaterialsRecipes(Consumer<FinishedRecipe> consumer) {
     // tier 1
-    registerMaterial(consumer, MaterialIds.wood, Ingredient.fromTag(Tags.Items.RODS_WOODEN), 1, 2, "wood/sticks");
-    registerMaterial(consumer, MaterialIds.wood, new IngredientWithout(Ingredient.fromTag(ItemTags.PLANKS), Ingredient.fromTag(TinkerTags.Items.SLIMY_PLANKS)),
+    registerMaterial(consumer, MaterialIds.wood, Ingredient.of(Tags.Items.RODS_WOODEN), 1, 2, "wood/sticks");
+    registerMaterial(consumer, MaterialIds.wood, new IngredientWithout(Ingredient.of(ItemTags.PLANKS), Ingredient.of(TinkerTags.Items.SLIMY_PLANKS)),
                      1, 1, "wood/planks");
-    registerMaterial(consumer, MaterialIds.wood, new IngredientWithout(Ingredient.fromTag(ItemTags.LOGS), Ingredient.fromTag(TinkerTags.Items.SLIMY_LOGS)),
+    registerMaterial(consumer, MaterialIds.wood, new IngredientWithout(Ingredient.of(ItemTags.LOGS), Ingredient.of(TinkerTags.Items.SLIMY_LOGS)),
                      4, 1, ItemOutput.fromStack(new ItemStack(Items.STICK, 2)), "wood/logs");
     registerMaterial(consumer, MaterialIds.stone, CompoundIngredient.from(
-      Ingredient.fromTag(Tags.Items.STONE), Ingredient.fromTag(Tags.Items.COBBLESTONE), Ingredient.fromItems(Blocks.BLACKSTONE, Blocks.POLISHED_BLACKSTONE)), 1, 1, "stone");
-    registerMaterial(consumer, MaterialIds.flint, Ingredient.fromItems(Items.FLINT, Blocks.BASALT, Blocks.POLISHED_BASALT), 1, 1, "flint");
-    registerMaterial(consumer, MaterialIds.bone, Ingredient.fromTag(Tags.Items.BONES), 1, 1, "bone");
-    registerMaterial(consumer, MaterialIds.necroticBone, Ingredient.fromTag(TinkerTags.Items.WITHER_BONES), 1, 1, "necrotic_bone");
+      Ingredient.of(Tags.Items.STONE), Ingredient.of(Tags.Items.COBBLESTONE), Ingredient.of(Blocks.BLACKSTONE, Blocks.POLISHED_BLACKSTONE)), 1, 1, "stone");
+    registerMaterial(consumer, MaterialIds.flint, Ingredient.of(Items.FLINT, Blocks.BASALT, Blocks.POLISHED_BASALT), 1, 1, "flint");
+    registerMaterial(consumer, MaterialIds.bone, Ingredient.of(Tags.Items.BONES), 1, 1, "bone");
+    registerMaterial(consumer, MaterialIds.necroticBone, Ingredient.of(TinkerTags.Items.WITHER_BONES), 1, 1, "necrotic_bone");
     // tier 2
     registerMetalMaterial(consumer, MaterialIds.iron, "iron", false);
-    registerMaterial(consumer, MaterialIds.searedStone, Ingredient.fromItems(TinkerSmeltery.searedBrick), 1, 2, "seared_stone/brick");
-    registerMaterial(consumer, MaterialIds.searedStone, Ingredient.fromTag(TinkerTags.Items.SEARED_BLOCKS), 2, 1, ItemOutput.fromItem(TinkerSmeltery.searedBrick), "seared_stone/block");
-    registerMaterial(consumer, MaterialIds.scorchedStone, Ingredient.fromItems(TinkerSmeltery.scorchedBrick), 1, 2, "scorched_stone/brick");
-    registerMaterial(consumer, MaterialIds.scorchedStone, Ingredient.fromTag(TinkerTags.Items.SCORCHED_BLOCKS), 2, 1, ItemOutput.fromItem(TinkerSmeltery.scorchedBrick), "scorched_stone/block");
+    registerMaterial(consumer, MaterialIds.searedStone, Ingredient.of(TinkerSmeltery.searedBrick), 1, 2, "seared_stone/brick");
+    registerMaterial(consumer, MaterialIds.searedStone, Ingredient.of(TinkerTags.Items.SEARED_BLOCKS), 2, 1, ItemOutput.fromItem(TinkerSmeltery.searedBrick), "seared_stone/block");
+    registerMaterial(consumer, MaterialIds.scorchedStone, Ingredient.of(TinkerSmeltery.scorchedBrick), 1, 2, "scorched_stone/brick");
+    registerMaterial(consumer, MaterialIds.scorchedStone, Ingredient.of(TinkerTags.Items.SCORCHED_BLOCKS), 2, 1, ItemOutput.fromItem(TinkerSmeltery.scorchedBrick), "scorched_stone/block");
     registerMetalMaterial(consumer, MaterialIds.copper, "copper", false);
-    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.fromTag(TinkerTags.Items.SLIMY_PLANKS), 1, 1, "slimewood/planks");
-    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.fromTag(TinkerWorld.greenheart.getLogItemTag()), 4, 1, ItemOutput.fromItem(TinkerWorld.greenheart), "slimewood/greenheart_logs");
-    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.fromTag(TinkerWorld.skyroot.getLogItemTag()), 4, 1, ItemOutput.fromItem(TinkerWorld.skyroot), "slimewood/skyroot_logs");
-    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.fromTag(TinkerWorld.bloodshroom.getLogItemTag()), 4, 1, ItemOutput.fromItem(TinkerWorld.bloodshroom), "slimewood/bloodshroom_logs");
+    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.of(TinkerTags.Items.SLIMY_PLANKS), 1, 1, "slimewood/planks");
+    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.of(TinkerWorld.greenheart.getLogItemTag()), 4, 1, ItemOutput.fromItem(TinkerWorld.greenheart), "slimewood/greenheart_logs");
+    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.of(TinkerWorld.skyroot.getLogItemTag()), 4, 1, ItemOutput.fromItem(TinkerWorld.skyroot), "slimewood/skyroot_logs");
+    registerMaterial(consumer, MaterialIds.slimewood, Ingredient.of(TinkerWorld.bloodshroom.getLogItemTag()), 4, 1, ItemOutput.fromItem(TinkerWorld.bloodshroom), "slimewood/bloodshroom_logs");
     registerMetalMaterial(consumer, MaterialIds.roseGold, "rose_gold", false);
     // tier 3
     registerMetalMaterial(consumer, MaterialIds.slimesteel, "slimesteel", false);
-    registerMaterial(consumer, MaterialIds.nahuatl, Ingredient.fromItems(Items.OBSIDIAN), 1, 1, "nahuatl");
+    registerMaterial(consumer, MaterialIds.nahuatl, Ingredient.of(Items.OBSIDIAN), 1, 1, "nahuatl");
     registerMetalMaterial(consumer, MaterialIds.tinkersBronze, "silicon_bronze", false);
     registerMetalMaterial(consumer, MaterialIds.pigIron, "pig_iron", false);
-    registerMaterial(consumer, MaterialIds.pigIron, Ingredient.fromItems(TinkerCommons.bacon), 1, 4, "pig_iron/bacon");
+    registerMaterial(consumer, MaterialIds.pigIron, Ingredient.of(TinkerCommons.bacon), 1, 4, "pig_iron/bacon");
 
     // tier 2 (nether)
     // tier 3 (nether)
@@ -131,7 +131,7 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
     //registerMaterial(consumer, MaterialIds.slimevine_ender, Ingredient.fromItems(TinkerWorld.enderSlimeVine), 1, 1, "slimevine_ender");
   }
 
-  private void addTinkerStationRecipes(Consumer<IFinishedRecipe> consumer) {
+  private void addTinkerStationRecipes(Consumer<FinishedRecipe> consumer) {
     registerBuildingRecipe(consumer, TinkerTools.pickaxe);
     registerBuildingRecipe(consumer, TinkerTools.sledgeHammer);
     registerBuildingRecipe(consumer, TinkerTools.veinHammer);
@@ -150,7 +150,7 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
     registerBuildingRecipe(consumer, TinkerTools.cleaver);
   }
 
-  private void registerBuildingRecipe(Consumer<IFinishedRecipe> consumer, Supplier<? extends ToolCore> sup) {
+  private void registerBuildingRecipe(Consumer<FinishedRecipe> consumer, Supplier<? extends ToolCore> sup) {
     // Base data
     ToolCore toolCore = sup.get();
     String name = Objects.requireNonNull(toolCore.getRegistryName()).getPath();
@@ -170,7 +170,7 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
    * @param cost      Part cost
    * @param cast      Part cast
    */
-  private void addPartRecipe(Consumer<IFinishedRecipe> consumer, Supplier<? extends IMaterialItem> sup, int cost, CastItemObject cast) {
+  private void addPartRecipe(Consumer<FinishedRecipe> consumer, Supplier<? extends IMaterialItem> sup, int cost, CastItemObject cast) {
     String folder = "tools/parts/";
     // Base data
     IMaterialItem part = sup.get();
@@ -224,7 +224,7 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
    * @param needed    Number of items needed
    * @param saveName  Material save name
    */
-  private void registerMaterial(Consumer<IFinishedRecipe> consumer, MaterialId material, Ingredient input, int value, int needed, String saveName) {
+  private void registerMaterial(Consumer<FinishedRecipe> consumer, MaterialId material, Ingredient input, int value, int needed, String saveName) {
     registerMaterial(consumer, material, input, value, needed, null, saveName);
   }
 
@@ -237,7 +237,7 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
    * @param needed    Number of items needed
    * @param saveName  Material save name
    */
-  private void registerMaterial(Consumer<IFinishedRecipe> consumer, MaterialId material, Ingredient input, int value, int needed, @Nullable ItemOutput leftover, String saveName) {
+  private void registerMaterial(Consumer<FinishedRecipe> consumer, MaterialId material, Ingredient input, int value, int needed, @Nullable ItemOutput leftover, String saveName) {
     MaterialRecipeBuilder builder = MaterialRecipeBuilder.materialRecipe(material)
                                                          .setIngredient(input)
                                                          .setValue(value)
@@ -254,14 +254,14 @@ public class ToolsRecipeProvider extends BaseRecipeProvider {
    * @param material  Material
    * @param name      Material name
    */
-  private void registerMetalMaterial(Consumer<IFinishedRecipe> consumer, MaterialId material, String name, boolean optional) {
-    Consumer<IFinishedRecipe> wrapped = optional ? withCondition(consumer, tagCondition("ingots/" + name)) : consumer;
+  private void registerMetalMaterial(Consumer<FinishedRecipe> consumer, MaterialId material, String name, boolean optional) {
+    Consumer<FinishedRecipe> wrapped = optional ? withCondition(consumer, tagCondition("ingots/" + name)) : consumer;
     String matName = material.getPath();
-    ITag<Item> ingotTag = getTag("forge", "ingots/" + name);
-    registerMaterial(wrapped, material, Ingredient.fromTag(ingotTag), 1, 1, matName + "/ingot");
+    Tag<Item> ingotTag = getTag("forge", "ingots/" + name);
+    registerMaterial(wrapped, material, Ingredient.of(ingotTag), 1, 1, matName + "/ingot");
     wrapped = optional ? withCondition(consumer, tagCondition("nuggets/" + name)) : consumer;
-    registerMaterial(wrapped, material, Ingredient.fromTag(getTag("forge", "nuggets/" + name)), 1, 9, matName + "/nugget");
+    registerMaterial(wrapped, material, Ingredient.of(getTag("forge", "nuggets/" + name)), 1, 9, matName + "/nugget");
     wrapped = optional ? withCondition(consumer, tagCondition("storage_blocks/" + name)) : consumer;
-    registerMaterial(wrapped, material, Ingredient.fromTag(getTag("forge", "storage_blocks/" + name)), 9, 1, ItemOutput.fromTag(ingotTag, 1), matName + "/block");
+    registerMaterial(wrapped, material, Ingredient.of(getTag("forge", "storage_blocks/" + name)), 9, 1, ItemOutput.fromTag(ingotTag, 1), matName + "/block");
   }
 }

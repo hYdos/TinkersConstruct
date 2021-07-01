@@ -1,6 +1,6 @@
 package slimeknights.tconstruct.library.book.sectiontransformer.materials;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import slimeknights.mantle.client.book.data.content.PageContent;

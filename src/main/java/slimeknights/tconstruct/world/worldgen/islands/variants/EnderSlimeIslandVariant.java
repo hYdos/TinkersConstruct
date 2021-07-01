@@ -1,8 +1,5 @@
 package slimeknights.tconstruct.world.worldgen.islands.variants;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.gen.feature.ConfiguredFeature;
 import slimeknights.tconstruct.fluids.TinkerFluids;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.shared.block.SlimeType;
@@ -10,6 +7,9 @@ import slimeknights.tconstruct.world.TinkerStructures;
 import slimeknights.tconstruct.world.TinkerWorld;
 
 import javax.annotation.Nullable;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import java.util.Objects;
 import java.util.Random;
 
@@ -32,12 +32,12 @@ public class EnderSlimeIslandVariant extends AbstractSlimeIslandVariant {
   @Nullable
   @Override
   public BlockState getVines() {
-    return TinkerWorld.enderSlimeVine.get().getDefaultState();
+    return TinkerWorld.enderSlimeVine.get().defaultBlockState();
   }
 
   @Override
   public BlockState getLakeFluid() {
-    return Objects.requireNonNull(TinkerFluids.enderSlime.getBlock()).getDefaultState();
+    return Objects.requireNonNull(TinkerFluids.enderSlime.getBlock()).defaultBlockState();
   }
 
   @Nullable

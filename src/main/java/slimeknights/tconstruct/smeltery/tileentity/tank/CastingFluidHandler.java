@@ -3,11 +3,11 @@ package slimeknights.tconstruct.smeltery.tileentity.tank;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -172,7 +172,7 @@ public class CastingFluidHandler implements IFluidHandler {
   private static final String TAG_CAPACITY = "capacity";
 
   /** Reads the tank from NBT */
-  public void readFromNBT(CompoundNBT nbt) {
+  public void readFromNBT(CompoundTag nbt) {
     capacity = nbt.getInt(TAG_CAPACITY);
     if (nbt.contains(TAG_FLUID, NBT.TAG_COMPOUND)) {
       setFluid(FluidStack.loadFluidStackFromNBT(nbt.getCompound(TAG_FLUID)));
@@ -186,10 +186,10 @@ public class CastingFluidHandler implements IFluidHandler {
   }
 
   /** Write the tank from NBT */
-  public CompoundNBT writeToNBT(CompoundNBT nbt) {
+  public CompoundTag writeToNBT(CompoundTag nbt) {
     nbt.putInt(TAG_CAPACITY, capacity);
     if (!fluid.isEmpty()) {
-      nbt.put(TAG_FLUID, fluid.writeToNBT(new CompoundNBT()));
+      nbt.put(TAG_FLUID, fluid.writeToNBT(new CompoundTag()));
     }
     if (filter != Fluids.EMPTY) {
       nbt.putString(TAG_FILTER, Objects.requireNonNull(filter.getRegistryName()).toString());
@@ -198,10 +198,10 @@ public class CastingFluidHandler implements IFluidHandler {
   }
 
   protected void onContentsChanged() {
-    tile.markDirty();
-    World world = tile.getWorld();
-    if (world != null && !world.isRemote) {
-      TinkerNetwork.getInstance().sendToClientsAround(new FluidUpdatePacket(tile.getPos(), this.getFluid()), world, tile.getPos());
+    tile.setChanged();
+    Level world = tile.getLevel();
+    if (world != null && !world.isClientSide) {
+      TinkerNetwork.getInstance().sendToClientsAround(new FluidUpdatePacket(tile.getBlockPos(), this.getFluid()), world, tile.getBlockPos());
     }
   }
 }

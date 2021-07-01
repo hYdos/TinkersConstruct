@@ -5,16 +5,16 @@
 package slimeknights.tconstruct.library;
 
 import com.google.common.collect.ImmutableMap;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.ForgeI18n;
 import net.minecraftforge.fml.ModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -108,7 +108,7 @@ public class Util {
    * @return  Translation key
    */
   public static String makeTranslationKey(String base, ResourceLocation name) {
-    return net.minecraft.util.Util.makeTranslationKey(base, name);
+    return net.minecraft.Util.makeDescriptionId(base, name);
   }
 
   /**
@@ -127,13 +127,13 @@ public class Util {
    * @param name  Object name
    * @return  Translation key
    */
-  public static IFormattableTextComponent makeTranslation(String base, String name) {
-    return new TranslationTextComponent(makeTranslationKey(base, name));
+  public static MutableComponent makeTranslation(String base, String name) {
+    return new TranslatableComponent(makeTranslationKey(base, name));
   }
 
 
   /**
-   * Same as {@link net.minecraft.util.Util#make(Object, Consumer)}
+   * Same as {@link net.minecraft.Util#make(Object, Consumer)}
    */
   public static <T> T make(T object, Consumer<T> consumer) {
     consumer.accept(object);
@@ -145,7 +145,7 @@ public class Util {
    */
   public static String translate(String key, Object... pars) {
     // translates twice to allow rerouting/alias
-    return I18n.format(I18n.format(String.format(key, pars)).trim()).trim();
+    return I18n.get(I18n.get(String.format(key, pars)).trim()).trim();
   }
 
   /**
@@ -153,14 +153,14 @@ public class Util {
    */
   public static String translateFormatted(String key, Object... pars) {
     // translates twice to allow rerouting/alias
-    return I18n.format(I18n.format(key, pars).trim()).trim();
+    return I18n.get(I18n.get(key, pars).trim()).trim();
   }
 
   /**
    * Returns the actual color value for a chatformatting
    */
-  public static int enumChatFormattingToColor(TextFormatting color) {
-    int i = color.getColorIndex();
+  public static int enumChatFormattingToColor(ChatFormatting color) {
+    int i = color.getId();
     int j = (i >> 3 & 1) * 85;
     int k = (i >> 2 & 1) * 170 + j;
     int l = (i >> 1 & 1) * 170 + j;
@@ -178,12 +178,12 @@ public class Util {
   }
 
   /* Position helpers */
-  private static ImmutableMap<Vector3i, Direction> offsetMap;
+  private static ImmutableMap<Vec3i, Direction> offsetMap;
 
   static {
-    ImmutableMap.Builder<Vector3i, Direction> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<Vec3i, Direction> builder = ImmutableMap.builder();
     for (Direction facing : Direction.values()) {
-      builder.put(facing.getDirectionVec(), facing);
+      builder.put(facing.getNormal(), facing);
     }
     offsetMap = builder.build();
   }
@@ -219,7 +219,7 @@ public class Util {
    * @param hitZ Z hit location
    * @return True if the click was within the box
    */
-  public static boolean clickedAABB(AxisAlignedBB aabb, float hitX, float hitY, float hitZ) {
+  public static boolean clickedAABB(AABB aabb, float hitX, float hitY, float hitZ) {
     return aabb.minX <= hitX && hitX <= aabb.maxX
       && aabb.minY <= hitY && hitY <= aabb.maxY
       && aabb.minZ <= hitZ && hitZ <= aabb.maxZ;
@@ -260,7 +260,7 @@ public class Util {
   public static Direction directionFromOffset(BlockPos pos, BlockPos neighbor) {
     BlockPos offset = neighbor.subtract(pos);
     for (Direction direction : Direction.values()) {
-      if (direction.getDirectionVec().equals(offset)) {
+      if (direction.getNormal().equals(offset)) {
         return direction;
       }
     }

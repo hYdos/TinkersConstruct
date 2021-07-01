@@ -3,11 +3,11 @@ package slimeknights.tconstruct.library.recipe.alloying;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.FluidIngredient;
 import slimeknights.mantle.recipe.RecipeHelper;
@@ -84,7 +84,7 @@ public class AlloyRecipeBuilder extends AbstractRecipeBuilder<AlloyRecipeBuilder
    * @param amount  Input amount
    * @return  Builder instance
    */
-  public AlloyRecipeBuilder addInput(ITag<Fluid> tag, int amount) {
+  public AlloyRecipeBuilder addInput(Tag<Fluid> tag, int amount) {
     return addInput(FluidIngredient.of(tag, amount));
   }
 
@@ -92,12 +92,12 @@ public class AlloyRecipeBuilder extends AbstractRecipeBuilder<AlloyRecipeBuilder
   /* Building */
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer) {
+  public void build(Consumer<FinishedRecipe> consumer) {
     build(consumer, Objects.requireNonNull(output.getFluid().getRegistryName()));
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
     if (inputs.size() < 2) {
       throw new IllegalStateException("Invalid alloying recipe " + id + ", must have at least two inputs");
     }
@@ -112,7 +112,7 @@ public class AlloyRecipeBuilder extends AbstractRecipeBuilder<AlloyRecipeBuilder
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
       JsonArray inputArray = new JsonArray();
       for (FluidIngredient input : inputs) {
         inputArray.add(input.serialize());
@@ -123,7 +123,7 @@ public class AlloyRecipeBuilder extends AbstractRecipeBuilder<AlloyRecipeBuilder
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return TinkerSmeltery.alloyingSerializer.get();
     }
   }

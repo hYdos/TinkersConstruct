@@ -1,8 +1,7 @@
 package slimeknights.tconstruct.library.utils;
 
-import net.minecraft.util.NonNullList;
-
 import java.util.Arrays;
+import net.minecraft.core.NonNullList;
 
 public final class ListUtil {
 

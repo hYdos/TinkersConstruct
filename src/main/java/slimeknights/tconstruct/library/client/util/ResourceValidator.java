@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.library.client.util;
 
 import com.google.common.collect.ImmutableSet;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
 import slimeknights.tconstruct.library.client.IEarlySafeManagerReloadListener;
 
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 
 /**
  * Utility that handles checking if a resource exists in any resource pack
@@ -32,10 +32,10 @@ public class ResourceValidator implements IEarlySafeManagerReloadListener, Predi
   }
 
   @Override
-  public void onReloadSafe(IResourceManager manager) {
+  public void onReloadSafe(ResourceManager manager) {
     int extensionLength = extension.length();
     // FIXME: this does not validate folder names
-    this.resources = manager.getAllResourceLocations(folder, (loc) -> {
+    this.resources = manager.listResources(folder, (loc) -> {
       // must have proper extension and contain valid characters
       return loc.endsWith(extension) && isPathValid(loc);
     }).stream().map((location) -> {

@@ -1,10 +1,10 @@
 package slimeknights.tconstruct.smeltery.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import slimeknights.tconstruct.smeltery.tileentity.MelterTileEntity;
@@ -19,7 +19,7 @@ public class MelterBlock extends TinyMultiblockController {
 
   @Nonnull
   @Override
-  public TileEntity createTileEntity(BlockState blockState, IBlockReader iBlockReader) {
+  public BlockEntity createTileEntity(BlockState blockState, BlockGetter iBlockReader) {
     return new MelterTileEntity();
   }
 
@@ -31,19 +31,19 @@ public class MelterBlock extends TinyMultiblockController {
   @Deprecated
   @Override
   @OnlyIn(Dist.CLIENT)
-  public float getAmbientOcclusionLightValue(BlockState state, IBlockReader worldIn, BlockPos pos) {
+  public float getShadeBrightness(BlockState state, BlockGetter worldIn, BlockPos pos) {
     return 1.0F;
   }
 
   @Override
-  public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos) {
+  public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
     return true;
   }
 
 
   @Override
-  public void animateTick(BlockState state, World world, BlockPos pos, Random rand) {
-    if (state.get(ACTIVE)) {
+  public void animateTick(BlockState state, Level world, BlockPos pos, Random rand) {
+    if (state.getValue(ACTIVE)) {
       double x = pos.getX() + 0.5D;
       double y = (double) pos.getY() + (rand.nextFloat() * 6F) / 16F;
       double z = pos.getZ() + 0.5D;

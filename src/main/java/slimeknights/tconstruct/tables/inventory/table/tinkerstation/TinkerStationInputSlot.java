@@ -2,8 +2,8 @@ package slimeknights.tconstruct.tables.inventory.table.tinkerstation;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import slimeknights.tconstruct.library.recipe.partbuilder.Pattern;
 import slimeknights.tconstruct.tables.tileentity.table.TinkerStationTileEntity;
 import slimeknights.tconstruct.tables.tileentity.table.crafting.LazyResultInventory;
@@ -24,7 +24,7 @@ public class TinkerStationInputSlot extends TinkerStationSlot {
   }
 
   @Override
-  public boolean isItemValid(ItemStack stack) {
+  public boolean mayPlace(ItemStack stack) {
     // dormant slots don't take any items, they can only be taken out of
     if (this.isDormant()) {
       return false;
@@ -34,8 +34,8 @@ public class TinkerStationInputSlot extends TinkerStationSlot {
   }
 
   @Override
-  public void onSlotChanged() {
-    craftResult.clear();
-    super.onSlotChanged();
+  public void setChanged() {
+    craftResult.clearContent();
+    super.setChanged();
   }
 }

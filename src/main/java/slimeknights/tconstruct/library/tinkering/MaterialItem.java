@@ -1,15 +1,15 @@
 package slimeknights.tconstruct.library.tinkering;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
@@ -40,7 +40,7 @@ public class MaterialItem extends Item implements IMaterialItem {
     return Optional.ofNullable(stack.getTag())
                    .map(compoundNBT -> compoundNBT.getString(NBTTags.PART_MATERIAL))
                    .filter(string -> !string.isEmpty())
-                   .map(MaterialId::tryCreate);
+                   .map(MaterialId::tryParse);
   }
 
   @Override
@@ -59,13 +59,13 @@ public class MaterialItem extends Item implements IMaterialItem {
   }
 
   @Override
-  public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-    if (this.isInGroup(group) && MaterialRegistry.isFullyLoaded()) {
+  public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
+    if (this.allowdedIn(group) && MaterialRegistry.isFullyLoaded()) {
       // if a specific material is set in the config, try adding that
       String showOnlyId = Config.COMMON.showOnlyPartMaterial.get();
       boolean added = false;
       if (!showOnlyId.isEmpty()) {
-        MaterialId materialId = MaterialId.tryCreate(showOnlyId);
+        MaterialId materialId = MaterialId.tryParse(showOnlyId);
         if (materialId != null) {
           IMaterial material = MaterialRegistry.getMaterial(materialId);
           if (material != IMaterial.UNKNOWN && canUseMaterial(material)) {
@@ -90,32 +90,32 @@ public class MaterialItem extends Item implements IMaterialItem {
   }
 
   @Override
-  public ITextComponent getDisplayName(ItemStack stack) {
+  public Component getName(ItemStack stack) {
     // if no material, return part name directly
     IMaterial material = getMaterial(stack);
     if (material == IMaterial.UNKNOWN) {
-      return super.getDisplayName(stack);
+      return super.getName(stack);
     }
-    String key = this.getTranslationKey(stack);
+    String key = this.getDescriptionId(stack);
     ResourceLocation loc = material.getIdentifier();
     // if there is a specific name, use that
     String fullKey = String.format("%s.%s.%s", key, loc.getNamespace(), loc.getPath());
     if (Util.canTranslate(fullKey)) {
-      return new TranslationTextComponent(fullKey);
+      return new TranslatableComponent(fullKey);
     }
     // try material name prefix next
     String materialKey = material.getTranslationKey();
     String materialPrefix = materialKey + ".format";
     if (Util.canTranslate(materialPrefix)) {
-      return new TranslationTextComponent(materialPrefix, new TranslationTextComponent(key));
+      return new TranslatableComponent(materialPrefix, new TranslatableComponent(key));
     }
     // format as "<material> <item name>"
-    return new TranslationTextComponent(materialKey).appendString(" ").append(new TranslationTextComponent(key));
+    return new TranslatableComponent(materialKey).append(" ").append(new TranslatableComponent(key));
   }
 
   @Override
   @OnlyIn(Dist.CLIENT)
-  public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> tooltip, ITooltipFlag flag) {
+  public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag flag) {
     addModTooltip(getMaterial(stack), tooltip);
   }
 
@@ -124,12 +124,12 @@ public class MaterialItem extends Item implements IMaterialItem {
      * @param tooltip   Tooltip list
      * @param material  Material to add
      */
-  protected static void addModTooltip(IMaterial material, List<ITextComponent> tooltip) {
+  protected static void addModTooltip(IMaterial material, List<Component> tooltip) {
     if (MaterialRegistry.getInstance().getMaterial(material.getIdentifier()) != IMaterial.UNKNOWN) {
       for (ModInfo modInfo : ModList.get().getMods()) {
         if (modInfo.getModId().equalsIgnoreCase(material.getIdentifier().getNamespace())) {
-          tooltip.add(new StringTextComponent(""));
-          tooltip.add(new TranslationTextComponent("tooltip.part.material_added_by", modInfo.getDisplayName()));
+          tooltip.add(new TextComponent(""));
+          tooltip.add(new TranslatableComponent("tooltip.part.material_added_by", modInfo.getDisplayName()));
           break;
         }
       }

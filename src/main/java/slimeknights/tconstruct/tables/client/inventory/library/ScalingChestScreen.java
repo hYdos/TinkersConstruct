@@ -1,24 +1,24 @@
 package slimeknights.tconstruct.tables.client.inventory.library;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.text.ITextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import slimeknights.mantle.client.screen.MultiModuleScreen;
 import slimeknights.mantle.inventory.BaseContainer;
 
-public class ScalingChestScreen<T extends TileEntity & IInventory> extends DynInventoryScreen {
+public class ScalingChestScreen<T extends BlockEntity & Container> extends DynInventoryScreen {
 
-  protected final IInventory inventory;
+  protected final Container inventory;
 
-  public ScalingChestScreen(MultiModuleScreen<?> parent, BaseContainer<T> container, PlayerInventory playerInventory, ITextComponent title) {
+  public ScalingChestScreen(MultiModuleScreen<?> parent, BaseContainer<T> container, Inventory playerInventory, Component title) {
     super(parent, container, playerInventory, title);
 
     this.inventory = container.getTile();
     if (this.inventory != null)
-      this.slotCount = this.inventory.getSizeInventory();
+      this.slotCount = this.inventory.getContainerSize();
     else
       this.slotCount = 0;
     this.sliderActive = true;
@@ -26,12 +26,12 @@ public class ScalingChestScreen<T extends TileEntity & IInventory> extends DynIn
 
   @Override
   public void updatePosition(int parentX, int parentY, int parentSizeX, int parentSizeY) {
-    this.guiLeft = parentX + this.xOffset;
-    this.guiTop = parentY + this.yOffset;
+    this.leftPos = parentX + this.xOffset;
+    this.topPos = parentY + this.yOffset;
 
     // calculate rows and columns from space
-    this.columns = (this.xSize - this.slider.width) / slot.w;
-    this.rows = this.ySize / slot.h;
+    this.columns = (this.imageWidth - this.slider.width) / slot.w;
+    this.rows = this.imageHeight / slot.h;
 
     this.updateSlider();
     this.updateSlots();
@@ -50,7 +50,7 @@ public class ScalingChestScreen<T extends TileEntity & IInventory> extends DynIn
     if (this.inventory == null) {
       this.slotCount = 0;
     } else {
-      this.slotCount = this.inventory.getSizeInventory();
+      this.slotCount = this.inventory.getContainerSize();
     }
     super.update(mouseX, mouseY);
 
@@ -65,7 +65,7 @@ public class ScalingChestScreen<T extends TileEntity & IInventory> extends DynIn
       return false;
     }
 
-    if (slot.getSlotIndex() >= this.inventory.getSizeInventory()) {
+    if (slot.getSlotIndex() >= this.inventory.getContainerSize()) {
       return false;
     }
 
@@ -73,7 +73,7 @@ public class ScalingChestScreen<T extends TileEntity & IInventory> extends DynIn
   }
 
   @Override
-  protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
+  protected void renderLabels(PoseStack matrixStack, int x, int y) {
   }
 
 }

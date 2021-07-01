@@ -20,22 +20,22 @@ import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.entity.EntityType;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.RecipeManager;
-import net.minecraft.tags.ITag;
-import net.minecraft.tags.TagCollectionManager;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.SerializationTags;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.ModList;
@@ -141,8 +141,8 @@ public class JEIPlugin implements IModPlugin {
 
   @Override
   public void registerRecipes(IRecipeRegistration register) {
-    assert Minecraft.getInstance().world != null;
-    RecipeManager manager = Minecraft.getInstance().world.getRecipeManager();
+    assert Minecraft.getInstance().level != null;
+    RecipeManager manager = Minecraft.getInstance().level.getRecipeManager();
     // casting
     List<IDisplayableCastingRecipe> castingBasinRecipes = RecipeHelper.getJEIRecipes(manager, RecipeTypes.CASTING_BASIN, IDisplayableCastingRecipe.class);
     register.addRecipes(castingBasinRecipes, TConstructRecipeCategoryUid.castingBasin);
@@ -194,11 +194,11 @@ public class JEIPlugin implements IModPlugin {
    * @param ownCategory  Category to always add
    * @param type         Molding recipe type
    */
-  private static <T extends IRecipe<C>, C extends IInventory> void addCastingCatalyst(IRecipeCatalystRegistration registry, IItemProvider item, ResourceLocation ownCategory, IRecipeType<T> type) {
+  private static <T extends Recipe<C>, C extends Container> void addCastingCatalyst(IRecipeCatalystRegistration registry, ItemLike item, ResourceLocation ownCategory, RecipeType<T> type) {
     ItemStack stack = new ItemStack(item);
     registry.addRecipeCatalyst(stack, ownCategory);
-    assert Minecraft.getInstance().world != null;
-    if (!Minecraft.getInstance().world.getRecipeManager().getRecipes(type).isEmpty()) {
+    assert Minecraft.getInstance().level != null;
+    if (!Minecraft.getInstance().level.getRecipeManager().byType(type).isEmpty()) {
       registry.addRecipeCatalyst(stack, TConstructRecipeCategoryUid.molding);
     }
   }
@@ -225,7 +225,7 @@ public class JEIPlugin implements IModPlugin {
     registry.addRecipeCatalyst(new ItemStack(TinkerSmeltery.foundryController), TConstructRecipeCategoryUid.foundry);
 
     // modifiers
-    for (Item item : TinkerTags.Items.MELEE.getAllElements()) {
+    for (Item item : TinkerTags.Items.MELEE.getValues()) {
       ItemStack stack = item instanceof ToolCore ? ((ToolCore)item).buildToolForRendering() : new ItemStack(item);
       registry.addRecipeCatalyst(stack, TConstructRecipeCategoryUid.severing);
     }
@@ -250,13 +250,13 @@ public class JEIPlugin implements IModPlugin {
     };
 
     // parts
-    for (Item item : TinkerTags.Items.TOOL_PARTS.getAllElements()) {
+    for (Item item : TinkerTags.Items.TOOL_PARTS.getValues()) {
       registry.registerSubtypeInterpreter(item, toolPartInterpreter);
     }
 
     // tools
     ISubtypeInterpreter toolInterpreter = new ToolSubtypeInterpreter();
-    for (Item item : TinkerTags.Items.MULTIPART_TOOL.getAllElements()) {
+    for (Item item : TinkerTags.Items.MULTIPART_TOOL.getValues()) {
       registry.registerSubtypeInterpreter(item, toolInterpreter);
     }
 
@@ -292,8 +292,8 @@ public class JEIPlugin implements IModPlugin {
    * @param cast     Cast instance
    */
   private static void optionalCast(IIngredientManager manager, CastItemObject cast) {
-    ITag<Item> tag = TagCollectionManager.getManager().getItemTags().get(new ResourceLocation("forge", cast.getName().getPath() + "s"));
-    if (tag == null || tag.getAllElements().isEmpty()) {
+    Tag<Item> tag = SerializationTags.getInstance().getItems().getTag(new ResourceLocation("forge", cast.getName().getPath() + "s"));
+    if (tag == null || tag.getValues().isEmpty()) {
       manager.removeIngredientsAtRuntime(VanillaTypes.ITEM, cast.values().stream().map(ItemStack::new).collect(Collectors.toList()));
     }
   }
@@ -312,8 +312,8 @@ public class JEIPlugin implements IModPlugin {
     removeFluid(manager, TinkerFluids.moltenKnightslime.get(), TinkerFluids.moltenKnightslime.asItem());
     // hide compat that is not present
     for (SmelteryCompat compat : SmelteryCompat.values()) {
-      ITag<Item> ingot = TagCollectionManager.getManager().getItemTags().get(new ResourceLocation("forge", "ingots/" + compat.getName()));
-      if (ingot == null || ingot.getAllElements().isEmpty()) {
+      Tag<Item> ingot = SerializationTags.getInstance().getItems().getTag(new ResourceLocation("forge", "ingots/" + compat.getName()));
+      if (ingot == null || ingot.getValues().isEmpty()) {
         removeFluid(manager, compat.getFluid(), compat.getBucket());
       }
     }
@@ -326,7 +326,7 @@ public class JEIPlugin implements IModPlugin {
   }
 
   /** Class to pass {@link IScreenWithFluidTank} into JEI */
-  public static class GuiContainerTankHandler<C extends Container, T extends ContainerScreen<C> & IScreenWithFluidTank> implements IGuiContainerHandler<T> {
+  public static class GuiContainerTankHandler<C extends AbstractContainerMenu, T extends AbstractContainerScreen<C> & IScreenWithFluidTank> implements IGuiContainerHandler<T> {
     @Override
     @Nullable
     public Object getIngredientUnderMouse(T containerScreen, double mouseX, double mouseY) {
@@ -384,11 +384,11 @@ public class JEIPlugin implements IModPlugin {
       // note this does not remove old tool parts from the previous materials list, though that is only an issue if the reload command is used
       if (manager != null && !MaterialRegistry.getMaterials().isEmpty()) {
         NonNullList<ItemStack> newStacks = NonNullList.create();
-        for (Item item : TinkerTags.Items.TOOL_PARTS.getAllElements()) {
-          item.fillItemGroup(ItemGroup.SEARCH, newStacks);
+        for (Item item : TinkerTags.Items.TOOL_PARTS.getValues()) {
+          item.fillItemCategory(CreativeModeTab.TAB_SEARCH, newStacks);
         }
-        for (Item item : TinkerTags.Items.MULTIPART_TOOL.getAllElements()) {
-          item.fillItemGroup(ItemGroup.SEARCH, newStacks);
+        for (Item item : TinkerTags.Items.MULTIPART_TOOL.getValues()) {
+          item.fillItemCategory(CreativeModeTab.TAB_SEARCH, newStacks);
         }
         if (!newStacks.isEmpty()) {
           manager.addIngredientsAtRuntime(VanillaTypes.ITEM, newStacks);

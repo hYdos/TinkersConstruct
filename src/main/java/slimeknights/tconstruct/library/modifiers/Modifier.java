@@ -2,35 +2,35 @@ package slimeknights.tconstruct.library.modifiers;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.item.UseAction;
-import net.minecraft.loot.LootContext;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.EffectUtils;
-import net.minecraft.potion.Effects;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectUtil;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.registries.IForgeRegistryEntry;
@@ -80,13 +80,13 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
   private String translationKey;
   /** Cached text component for display names */
   @Nullable
-  private ITextComponent displayName;
+  private Component displayName;
   /** Cached text component for description */
   @Nullable
-  private List<ITextComponent> descriptionList;
+  private List<Component> descriptionList;
   /** Cached text component for description */
   @Nullable
-  private ITextComponent description;
+  private Component description;
 
   /**
    * Override this method to make your modifier run earlier or later.
@@ -136,7 +136,7 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @return  Translation key
    */
   protected String makeTranslationKey() {
-    return Util.makeTranslationKey("modifier", registryName);
+    return Util.makeDescriptionId("modifier", registryName);
   }
 
   /**
@@ -154,8 +154,8 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * Overridable method to create the display name for this modifier, ideal to modify colors
    * @return  Display name
    */
-  protected ITextComponent makeDisplayName() {
-    return new TranslationTextComponent(getTranslationKey());
+  protected Component makeDisplayName() {
+    return new TranslatableComponent(getTranslationKey());
   }
 
   /**
@@ -163,17 +163,17 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param component  Component to modifiy
    * @return  Resulting component
    */
-  public IFormattableTextComponent applyStyle(IFormattableTextComponent component) {
-      return component.modifyStyle(style -> style.setColor(Color.fromInt(color)));
+  public MutableComponent applyStyle(MutableComponent component) {
+      return component.withStyle(style -> style.withColor(TextColor.fromRgb(color)));
   }
 
   /**
    * Gets the display name for this modifier
    * @return  Display name for this modifier
    */
-  public final ITextComponent getDisplayName() {
+  public final Component getDisplayName() {
     if (displayName == null) {
-      displayName = new TranslationTextComponent(getTranslationKey()).modifyStyle(style -> style.setColor(Color.fromInt(getColor())));
+      displayName = new TranslatableComponent(getTranslationKey()).withStyle(style -> style.withColor(TextColor.fromRgb(getColor())));
     }
     return displayName;
   }
@@ -183,10 +183,10 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param level  Modifier level
    * @return  Display name
    */
-  public ITextComponent getDisplayName(int level) {
-    return applyStyle(new TranslationTextComponent(getTranslationKey())
-                        .appendString(" ")
-                        .append(new TranslationTextComponent(KEY_LEVEL + level)));
+  public Component getDisplayName(int level) {
+    return applyStyle(new TranslatableComponent(getTranslationKey())
+                        .append(" ")
+                        .append(new TranslatableComponent(KEY_LEVEL + level)));
   }
 
   /**
@@ -195,7 +195,7 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param level  Tool level
    * @return  Stack sensitive display name
    */
-  public ITextComponent getDisplayName(IModifierToolStack tool, int level) {
+  public Component getDisplayName(IModifierToolStack tool, int level) {
     return getDisplayName(level);
   }
 
@@ -207,17 +207,17 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param isAdvanced  Tooltip flag type
    * @param detailed  If true, showing detailed view, such as in the tinker station
    */
-  public void addInformation(IModifierToolStack tool, int level, List<ITextComponent> tooltip, boolean isAdvanced, boolean detailed) {}
+  public void addInformation(IModifierToolStack tool, int level, List<Component> tooltip, boolean isAdvanced, boolean detailed) {}
 
   /**
    * Gets the description for this modifier
    * @return  Description for this modifier
    */
-  public final List<ITextComponent> getDescriptionList() {
+  public final List<Component> getDescriptionList() {
     if (descriptionList == null) {
       descriptionList = Arrays.asList(
-        new TranslationTextComponent(getTranslationKey() + ".flavor").mergeStyle(TextFormatting.ITALIC),
-        new TranslationTextComponent(getTranslationKey() + ".description"));
+        new TranslatableComponent(getTranslationKey() + ".flavor").withStyle(ChatFormatting.ITALIC),
+        new TranslatableComponent(getTranslationKey() + ".description"));
     }
     return descriptionList;
   }
@@ -226,11 +226,11 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * Gets the description for this modifier
    * @return  Description for this modifier
    */
-  public final ITextComponent getDescription() {
+  public final Component getDescription() {
     if (description == null) {
       description = getDescriptionList().stream()
-                                        .reduce((c1, c2) -> new StringTextComponent("").append(c1).appendString("\n").append(c2))
-                                        .orElse(StringTextComponent.EMPTY);
+                                        .reduce((c1, c2) -> new TextComponent("").append(c1).append("\n").append(c2))
+                                        .orElse(TextComponent.EMPTY);
     }
     return description;
   }
@@ -258,7 +258,7 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #addAttributes(IModifierToolStack, int, EquipmentSlotType, BiConsumer)}: Allows dynamic stats based on any tool stat, but does not support mining speed, mining level, or durability.</li>
+   *   <li>{@link #addAttributes(IModifierToolStack, int, EquipmentSlot, BiConsumer)}: Allows dynamic stats based on any tool stat, but does not support mining speed, mining level, or durability.</li>
    *   <li>{@link #onBreakSpeed(IModifierToolStack, int, BreakSpeed, Direction, boolean, float)}: Allows dynamic mining speed based on the block mined and the entity mining. Will not show in tooltips.</li>
    * </ul>
    * @param toolDefinition  Tool definition, will be empty for non-multitools
@@ -282,7 +282,7 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param slot      Slot for the attributes
    * @param consumer  Attribute consumer
    */
-  public void addAttributes(IModifierToolStack tool, int level, EquipmentSlotType slot, BiConsumer<Attribute,AttributeModifier> consumer) {}
+  public void addAttributes(IModifierToolStack tool, int level, EquipmentSlot slot, BiConsumer<Attribute,AttributeModifier> consumer) {}
 
   /**
    * Called when modifiers or tool materials change to validate the tool. You are free to modify persistent data in this hook if needed.
@@ -330,7 +330,7 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param isCorrectSlot  If true, this item is in the proper slot. For tools, that is main hand or off hand. For armor, this means its in the correct armor slot
    * @param stack          Item stack instance to check other slots for the tool. Do not modify
    */
-  public void onInventoryTick(IModifierToolStack tool, int level, World world, LivingEntity holder, int itemSlot, boolean isSelected, boolean isCorrectSlot, ItemStack stack) {}
+  public void onInventoryTick(IModifierToolStack tool, int level, Level world, LivingEntity holder, int itemSlot, boolean isSelected, boolean isCorrectSlot, ItemStack stack) {}
 
   /**
    * Called on entity or block loot to allow modifying loot
@@ -349,21 +349,21 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
 
   /**
    * Called when this item is used when targeting a block, <i>before</i> the block is activated.
-   * In general it is better to use {@link #afterBlockUse(IModifierToolStack, int, ItemUseContext)} for consistency with vanilla items.
+   * In general it is better to use {@link #afterBlockUse(IModifierToolStack, int, UseOnContext)} for consistency with vanilla items.
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #onEntityUse(IModifierToolStack, int, PlayerEntity, LivingEntity, Hand)}: Processes use actions on entities.</li>
-   *   <li>{@link #afterBlockUse(IModifierToolStack, int, ItemUseContext)}: Runs after the block is activated, preferred hook. </li>
-   *   <li>{@link #onToolUse(IModifierToolStack, int, World, PlayerEntity, Hand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
+   *   <li>{@link #onEntityUse(IModifierToolStack, int, Player, LivingEntity, InteractionHand)}: Processes use actions on entities.</li>
+   *   <li>{@link #afterBlockUse(IModifierToolStack, int, UseOnContext)}: Runs after the block is activated, preferred hook. </li>
+   *   <li>{@link #onToolUse(IModifierToolStack, int, Level, Player, InteractionHand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
    * </ul>
    * @param tool           Current tool instance
    * @param level          Modifier level
    * @param context        Full item use context
    * @return  Return PASS or FAIL to allow vanilla handling, any other to stop later modifiers from running.
    */
-  public ActionResultType beforeBlockUse(IModifierToolStack tool, int level, ItemUseContext context) {
-    return ActionResultType.PASS;
+  public InteractionResult beforeBlockUse(IModifierToolStack tool, int level, UseOnContext context) {
+    return InteractionResult.PASS;
   }
 
 
@@ -372,17 +372,17 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #onEntityUse(IModifierToolStack, int, PlayerEntity, LivingEntity, Hand)}: Processes use actions on entities.</li>
-   *   <li>{@link #beforeBlockUse(IModifierToolStack, int, ItemUseContext)}: Runs before the block is activated, can be used to prevent block interaction entirely but less consistent with vanilla </li>
-   *   <li>{@link #onToolUse(IModifierToolStack, int, World, PlayerEntity, Hand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
+   *   <li>{@link #onEntityUse(IModifierToolStack, int, Player, LivingEntity, InteractionHand)}: Processes use actions on entities.</li>
+   *   <li>{@link #beforeBlockUse(IModifierToolStack, int, UseOnContext)}: Runs before the block is activated, can be used to prevent block interaction entirely but less consistent with vanilla </li>
+   *   <li>{@link #onToolUse(IModifierToolStack, int, Level, Player, InteractionHand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
    * </ul>
    * @param tool           Current tool instance
    * @param level          Modifier level
    * @param context        Full item use context
    * @return  Return PASS or FAIL to allow vanilla handling, any other to stop later modifiers from running.
    */
-  public ActionResultType afterBlockUse(IModifierToolStack tool, int level, ItemUseContext context) {
-    return ActionResultType.PASS;
+  public InteractionResult afterBlockUse(IModifierToolStack tool, int level, UseOnContext context) {
+    return InteractionResult.PASS;
   }
 
   /**
@@ -390,9 +390,9 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #onEntityUse(IModifierToolStack, int, PlayerEntity, LivingEntity, Hand)}: Standard interaction hook, generally preferred over this one</li>
-   *   <li>{@link #afterBlockUse(IModifierToolStack, int, ItemUseContext)}: Processes use actions on blocks.</li>
-   *   <li>{@link #onToolUse(IModifierToolStack, int, World, PlayerEntity, Hand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
+   *   <li>{@link #onEntityUse(IModifierToolStack, int, Player, LivingEntity, InteractionHand)}: Standard interaction hook, generally preferred over this one</li>
+   *   <li>{@link #afterBlockUse(IModifierToolStack, int, UseOnContext)}: Processes use actions on blocks.</li>
+   *   <li>{@link #onToolUse(IModifierToolStack, int, Level, Player, InteractionHand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
    * </ul>
    * @param tool           Current tool instance
    * @param level          Modifier level
@@ -401,8 +401,8 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param hand           Current hand
    * @return  Return PASS or FAIL to allow vanilla handling, any other to stop later modifiers from running.
    */
-  public ActionResultType onEntityUseFirst(IModifierToolStack tool, int level, PlayerEntity player, Entity target, Hand hand) {
-    return ActionResultType.PASS;
+  public InteractionResult onEntityUseFirst(IModifierToolStack tool, int level, Player player, Entity target, InteractionHand hand) {
+    return InteractionResult.PASS;
   }
 
   /**
@@ -410,9 +410,9 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #onEntityUseFirst(IModifierToolStack, int, PlayerEntity, Entity, Hand)}: Runs on all entities instead of just living, and runs before normal entity interaction</li>
-   *   <li>{@link #afterBlockUse(IModifierToolStack, int, ItemUseContext)}: Processes use actions on blocks.</li>
-   *   <li>{@link #onToolUse(IModifierToolStack, int, World, PlayerEntity, Hand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
+   *   <li>{@link #onEntityUseFirst(IModifierToolStack, int, Player, Entity, InteractionHand)}: Runs on all entities instead of just living, and runs before normal entity interaction</li>
+   *   <li>{@link #afterBlockUse(IModifierToolStack, int, UseOnContext)}: Processes use actions on blocks.</li>
+   *   <li>{@link #onToolUse(IModifierToolStack, int, Level, Player, InteractionHand)}: Processes any use actions, but runs later than onBlockUse or onEntityUse.</li>
    * </ul>
    * @param tool           Current tool instance
    * @param level          Modifier level
@@ -421,8 +421,8 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param hand           Current hand
    * @return  Return PASS or FAIL to allow vanilla handling, any other to stop later modifiers from running.
    */
-  public ActionResultType onEntityUse(IModifierToolStack tool, int level, PlayerEntity player, LivingEntity target, Hand hand) {
-    return ActionResultType.PASS;
+  public InteractionResult onEntityUse(IModifierToolStack tool, int level, Player player, LivingEntity target, InteractionHand hand) {
+    return InteractionResult.PASS;
   }
 
   /**
@@ -430,8 +430,8 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #afterBlockUse(IModifierToolStack, int, ItemUseContext)}: Processes use actions on blocks.</li>
-   *   <li>{@link #onEntityUse(IModifierToolStack, int, PlayerEntity, LivingEntity, Hand)}: Processes use actions on entities.</li>
+   *   <li>{@link #afterBlockUse(IModifierToolStack, int, UseOnContext)}: Processes use actions on blocks.</li>
+   *   <li>{@link #onEntityUse(IModifierToolStack, int, Player, LivingEntity, InteractionHand)}: Processes use actions on entities.</li>
    * </ul>
    * @param tool           Current tool instance
    * @param level          Modifier level
@@ -440,17 +440,17 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param hand           Current hand
    * @return  Return PASS or FAIL to allow vanilla handling, any other to stop later modifiers from running.
    */
-  public ActionResultType onToolUse(IModifierToolStack tool, int level, World world, PlayerEntity player, Hand hand) {
-    return ActionResultType.PASS;
+  public InteractionResult onToolUse(IModifierToolStack tool, int level, Level world, Player player, InteractionHand hand) {
+    return InteractionResult.PASS;
   }
 
   /**
    * Called when the player stops using the tool.
-   * To setup, use {@link LivingEntity#setActiveHand(Hand)} in {@link #onToolUse(IModifierToolStack, int, World, PlayerEntity, Hand)}.
+   * To setup, use {@link LivingEntity#startUsingItem(InteractionHand)} in {@link #onToolUse(IModifierToolStack, int, Level, Player, InteractionHand)}.
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #onFinishUsing(IModifierToolStack, int, World, LivingEntity)}: Called when the duration timer reaches the end, even if still held
+   *   <li>{@link #onFinishUsing(IModifierToolStack, int, Level, LivingEntity)}: Called when the duration timer reaches the end, even if still held
    *  </ul>
    * @param tool           Current tool instance
    * @param level          Modifier level
@@ -459,17 +459,17 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param timeLeft       How many ticks of use duration was left
   * @return  Whether the modifier should block any incoming ones from firing
   */
-  public boolean onStoppedUsing(IModifierToolStack tool, int level, World world, LivingEntity entity, int timeLeft) {
+  public boolean onStoppedUsing(IModifierToolStack tool, int level, Level world, LivingEntity entity, int timeLeft) {
     return false;
   }
 
   /**
    * Called when the use duration on this tool reaches the end.
-   * To setup, use {@link LivingEntity#setActiveHand(Hand)} in {@link #onToolUse(IModifierToolStack, int, World, PlayerEntity, Hand)} and set the duration in {@link #getUseDuration(IModifierToolStack, int)}
+   * To setup, use {@link LivingEntity#startUsingItem(InteractionHand)} in {@link #onToolUse(IModifierToolStack, int, Level, Player, InteractionHand)} and set the duration in {@link #getUseDuration(IModifierToolStack, int)}
    * <br>
    * Alternatives:
    * <ul>
-   *   <li>{@link #onStoppedUsing(IModifierToolStack, int, World, LivingEntity, int)}: Called when the player lets go before the duration reaches the end
+   *   <li>{@link #onStoppedUsing(IModifierToolStack, int, Level, LivingEntity, int)}: Called when the player lets go before the duration reaches the end
    * </ul>
    * @param tool           Current tool instance
    * @param level          Modifier level
@@ -477,7 +477,7 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param entity         Entity holding tool
    * @return  Whether the modifier should block any incoming ones from firing
    */
-  public boolean onFinishUsing(IModifierToolStack tool, int level, World world, LivingEntity entity) {
+  public boolean onFinishUsing(IModifierToolStack tool, int level, Level world, LivingEntity entity) {
     return false;
   }
 
@@ -495,8 +495,8 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @param level          Modifier level
   * @return  Use action to be performed
   */
-  public UseAction getUseAction(IModifierToolStack tool, int level) {
-     return UseAction.NONE;
+  public UseAnim getUseAction(IModifierToolStack tool, int level) {
+     return UseAnim.NONE;
   }
 
 
@@ -713,12 +713,12 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
    * @return  Tool stack
    */
   @Nullable
-  public static ToolStack getHeldTool(@Nullable LivingEntity living, Hand hand) {
+  public static ToolStack getHeldTool(@Nullable LivingEntity living, InteractionHand hand) {
     if (living == null) {
       return null;
     }
-    ItemStack stack = living.getHeldItem(hand);
-    if (stack.isEmpty() || !stack.getItem().isIn(TinkerTags.Items.MODIFIABLE)) {
+    ItemStack stack = living.getItemInHand(hand);
+    if (stack.isEmpty() || !stack.getItem().is(TinkerTags.Items.MODIFIABLE)) {
       return null;
     }
     ToolStack tool = ToolStack.from(stack);
@@ -733,11 +733,11 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
   public static float getMiningModifier(LivingEntity entity) {
     float modifier = 1.0f;
     // haste effect
-    if (EffectUtils.hasMiningSpeedup(entity)) {
-      modifier *= 1.0F + (EffectUtils.getMiningSpeedup(entity) + 1) * 0.2f;
+    if (MobEffectUtil.hasDigSpeed(entity)) {
+      modifier *= 1.0F + (MobEffectUtil.getDigSpeedAmplification(entity) + 1) * 0.2f;
     }
     // mining fatigue
-    EffectInstance miningFatigue = entity.getActivePotionEffect(Effects.MINING_FATIGUE);
+    MobEffectInstance miningFatigue = entity.getEffect(MobEffects.DIG_SLOWDOWN);
     if (miningFatigue != null) {
       switch(miningFatigue.getAmplifier()) {
         case 0:
@@ -755,7 +755,7 @@ public class Modifier implements IForgeRegistryEntry<Modifier> {
       }
     }
     // water
-    if (entity.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(entity)) {
+    if (entity.isEyeInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(entity)) {
       modifier /= 5.0F;
     }
     if (!entity.isOnGround()) {

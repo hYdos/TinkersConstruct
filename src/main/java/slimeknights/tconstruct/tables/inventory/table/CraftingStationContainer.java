@@ -1,16 +1,16 @@
 package slimeknights.tconstruct.tables.inventory.table;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
 import slimeknights.tconstruct.tables.TinkerTables;
 import slimeknights.tconstruct.tables.inventory.BaseStationContainer;
 import slimeknights.tconstruct.tables.tileentity.table.CraftingStationTileEntity;
 
 import javax.annotation.Nullable;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
 public class CraftingStationContainer extends BaseStationContainer<CraftingStationTileEntity> {
   private final PlayerSensitiveLazyResultSlot resultSlot;
@@ -21,7 +21,7 @@ public class CraftingStationContainer extends BaseStationContainer<CraftingStati
    * @param inv   Player inventory
    * @param tile  Relevant tile entity
    */
-  public CraftingStationContainer(int id, PlayerInventory inv, @Nullable CraftingStationTileEntity tile) {
+  public CraftingStationContainer(int id, Inventory inv, @Nullable CraftingStationTileEntity tile) {
     super(TinkerTables.craftingStationContainer.get(), id, inv, tile);
 
     // unfortunately, nothing works with no tile
@@ -53,18 +53,18 @@ public class CraftingStationContainer extends BaseStationContainer<CraftingStati
    * @param inv  Player inventory
    * @param buf  Buffer for fetching tile
    */
-  public CraftingStationContainer(int id, PlayerInventory inv, PacketBuffer buf) {
+  public CraftingStationContainer(int id, Inventory inv, FriendlyByteBuf buf) {
     this(id, inv, getTileEntityFromBuf(buf, CraftingStationTileEntity.class));
   }
 
   @Override
-  public ItemStack transferStackInSlot(PlayerEntity player, int index) {
-    Slot slot = this.inventorySlots.get(index);
+  public ItemStack quickMoveStack(Player player, int index) {
+    Slot slot = this.slots.get(index);
     // fix issue on shift clicking from the result slot if the recipe result mismatches the displayed item
     if (slot == resultSlot) {
-      if (tile != null && slot.getHasStack()) {
+      if (tile != null && slot.hasItem()) {
         // return the original result so shift click works
-        ItemStack original = slot.getStack().copy(); // TODO: are these copies really needed?
+        ItemStack original = slot.getItem().copy(); // TODO: are these copies really needed?
         // but add the true result into the inventory
         ItemStack result = tile.getResultForPlayer(player);
         if (!result.isEmpty()) {
@@ -88,17 +88,17 @@ public class CraftingStationContainer extends BaseStationContainer<CraftingStati
       }
       return ItemStack.EMPTY;
     } else {
-      return super.transferStackInSlot(player, index);
+      return super.quickMoveStack(player, index);
     }
   }
 
   @Override
-  public void onCraftMatrixChanged(IInventory inventoryIn) {
+  public void slotsChanged(Container inventoryIn) {
     // handled in TE item display logic
   }
 
   @Override
-  public boolean canMergeSlot(ItemStack stack, Slot slot) {
-    return slot != this.resultSlot && super.canMergeSlot(stack, slot);
+  public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
+    return slot != this.resultSlot && super.canTakeItemForPickAll(stack, slot);
   }
 }

@@ -1,12 +1,12 @@
 package slimeknights.tconstruct.smeltery.block.component;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import slimeknights.tconstruct.library.fluid.FluidTransferUtil;
 import slimeknights.tconstruct.smeltery.tileentity.DrainTileEntity;
 
@@ -19,12 +19,12 @@ public class SearedDrainBlock extends OrientableSmelteryBlock {
   @SuppressWarnings("deprecation")
   @Deprecated
   @Override
-  public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
+  public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
     if (FluidTransferUtil.interactWithFluidItem(world, pos, player, hand, hit)) {
-      return ActionResultType.SUCCESS;
-    } else if (FluidTransferUtil.interactWithBucket(world, pos, player, hand, hit.getFace(), state.get(FACING).getOpposite())) {
-      return ActionResultType.SUCCESS;
+      return InteractionResult.SUCCESS;
+    } else if (FluidTransferUtil.interactWithBucket(world, pos, player, hand, hit.getDirection(), state.getValue(FACING).getOpposite())) {
+      return InteractionResult.SUCCESS;
     }
-    return ActionResultType.PASS;
+    return InteractionResult.PASS;
   }
 }

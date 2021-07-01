@@ -3,9 +3,6 @@ package slimeknights.tconstruct.library.recipe.tinkerstation.modifier;
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
 import slimeknights.mantle.recipe.SizedIngredient;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.recipe.RecipeCacheInvalidator;
@@ -20,6 +17,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 
 /** Logic to check various modifier recipe based properties */
 public class ModifierRecipeLookup {
@@ -66,7 +66,7 @@ public class ModifierRecipeLookup {
     LISTENER.checkClear();
     // this should work on both client and server
     // server just pulls from the tag, client does not use tags directly at this stage
-    for (ItemStack stack : ingredient.getMatchingStacks()) {
+    for (ItemStack stack : ingredient.getItems()) {
       MODIFIERS.add(stack.getItem());
     }
   }

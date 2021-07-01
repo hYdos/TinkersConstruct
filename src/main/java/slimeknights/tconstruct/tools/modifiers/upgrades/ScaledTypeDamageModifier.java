@@ -1,21 +1,21 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.modifiers.IncrementalModifier;
 import slimeknights.tconstruct.library.tools.helper.ToolAttackContext;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
 
 import java.util.List;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 
 /** Shared logic for all modifiers that boost damage against a creature type */
 public class ScaledTypeDamageModifier extends IncrementalModifier {
-  private final CreatureAttribute type;
-  public ScaledTypeDamageModifier(int color, CreatureAttribute type) {
+  private final MobType type;
+  public ScaledTypeDamageModifier(int color, MobType type) {
     super(color);
     this.type = type;
   }
@@ -26,7 +26,7 @@ public class ScaledTypeDamageModifier extends IncrementalModifier {
    * @return  True if effective
    */
   protected boolean isEffective(LivingEntity target) {
-    return target.getCreatureAttribute() == type;
+    return target.getMobType() == type;
   }
 
   @Override
@@ -39,7 +39,7 @@ public class ScaledTypeDamageModifier extends IncrementalModifier {
   }
 
   @Override
-  public void addInformation(IModifierToolStack tool, int level, List<ITextComponent> tooltip, boolean isAdvanced, boolean detailed) {
+  public void addInformation(IModifierToolStack tool, int level, List<Component> tooltip, boolean isAdvanced, boolean detailed) {
     addDamageTooltip(this, tool, level, 2.5f, tooltip);
   }
 
@@ -51,9 +51,9 @@ public class ScaledTypeDamageModifier extends IncrementalModifier {
    * @param levelAmount  Bonus per level
    * @param tooltip      Tooltip
    */
-  public static void addDamageTooltip(IncrementalModifier self, IModifierToolStack tool, int level, float levelAmount, List<ITextComponent> tooltip) {
-    tooltip.add(self.applyStyle(new StringTextComponent("+" + Util.df.format(self.getScaledLevel(tool, level) * levelAmount))
-                                  .appendString(" ")
-                                  .append(new TranslationTextComponent(self.getTranslationKey() + ".damage"))));
+  public static void addDamageTooltip(IncrementalModifier self, IModifierToolStack tool, int level, float levelAmount, List<Component> tooltip) {
+    tooltip.add(self.applyStyle(new TextComponent("+" + Util.df.format(self.getScaledLevel(tool, level) * levelAmount))
+                                  .append(" ")
+                                  .append(new TranslatableComponent(self.getTranslationKey() + ".damage"))));
   }
 }

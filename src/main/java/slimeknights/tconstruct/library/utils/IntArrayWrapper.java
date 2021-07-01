@@ -1,12 +1,11 @@
 package slimeknights.tconstruct.library.utils;
 
 import lombok.AllArgsConstructor;
-import net.minecraft.util.IIntArray;
-
+import net.minecraft.world.inventory.ContainerData;
 import java.util.function.Supplier;
 
 @AllArgsConstructor
-public class IntArrayWrapper implements IIntArray {
+public class IntArrayWrapper implements ContainerData {
   private final Supplier<int[]> sup;
 
   @Override
@@ -27,7 +26,7 @@ public class IntArrayWrapper implements IIntArray {
   }
 
   @Override
-  public int size() {
+  public int getCount() {
     return sup.get().length;
   }
 }

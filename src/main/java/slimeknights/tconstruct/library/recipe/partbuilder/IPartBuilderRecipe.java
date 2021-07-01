@@ -1,7 +1,5 @@
 package slimeknights.tconstruct.library.recipe.partbuilder;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
 import slimeknights.mantle.recipe.ICommonRecipe;
 import slimeknights.tconstruct.library.recipe.RecipeTypes;
 import slimeknights.tconstruct.library.recipe.material.MaterialRecipe;
@@ -9,6 +7,8 @@ import slimeknights.tconstruct.tables.TinkerTables;
 import slimeknights.tconstruct.tables.tileentity.table.crafting.PartBuilderInventoryWrapper;
 
 import java.util.Optional;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
 
 public interface IPartBuilderRecipe extends ICommonRecipe<IPartBuilderInventory> {
   /** Gets the pattern needed for this recipe,
@@ -42,12 +42,12 @@ public interface IPartBuilderRecipe extends ICommonRecipe<IPartBuilderInventory>
   /* Recipe data */
 
   @Override
-  default IRecipeType<?> getType() {
+  default RecipeType<?> getType() {
     return RecipeTypes.PART_BUILDER;
   }
 
   @Override
-  default ItemStack getIcon() {
+  default ItemStack getToastSymbol() {
     return new ItemStack(TinkerTables.partBuilder);
   }
 

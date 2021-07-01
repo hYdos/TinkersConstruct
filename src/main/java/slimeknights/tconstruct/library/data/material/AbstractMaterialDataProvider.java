@@ -2,8 +2,8 @@ package slimeknights.tconstruct.library.data.material;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.DirectoryCache;
-import net.minecraft.util.text.Color;
+import net.minecraft.data.HashCache;
+import net.minecraft.network.chat.TextColor;
 import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.common.crafting.conditions.NotCondition;
 import net.minecraftforge.common.crafting.conditions.TagEmptyCondition;
@@ -62,7 +62,7 @@ public abstract class AbstractMaterialDataProvider extends GenericDataProvider {
   }
 
   @Override
-  public void act(DirectoryCache cache) {
+  public void run(HashCache cache) {
     ensureAddMaterialsRun();
     allMaterials.forEach((id, pair) -> saveThing(cache, pair.getFirst().getIdentifier(), convert(pair.getFirst(), pair.getSecond())));
   }
@@ -86,7 +86,7 @@ public abstract class AbstractMaterialDataProvider extends GenericDataProvider {
 
   /** Creates a normal material with a condition */
   protected void addMaterial(MaterialId location, int tier, int order, boolean craftable, int color, boolean hidden, @Nullable ICondition condition) {
-    addMaterial(new Material(location, tier, order, craftable, Color.fromInt(color), hidden), condition);
+    addMaterial(new Material(location, tier, order, craftable, TextColor.fromRgb(color), hidden), condition);
   }
 
   /** Creates a normal material */
@@ -111,6 +111,6 @@ public abstract class AbstractMaterialDataProvider extends GenericDataProvider {
    * @return  Material JSON
    */
   private MaterialJson convert(IMaterial material, @Nullable ICondition condition) {
-    return new MaterialJson(condition, material.isCraftable(), material.getTier(), material.getSortOrder(), material.getColor().getName(), material.isHidden());
+    return new MaterialJson(condition, material.isCraftable(), material.getTier(), material.getSortOrder(), material.getColor().serialize(), material.isHidden());
   }
 }

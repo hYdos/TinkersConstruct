@@ -1,17 +1,17 @@
 package slimeknights.tconstruct.gadgets.item;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SnowballItem;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SnowballItem;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import slimeknights.mantle.util.TranslationHelper;
@@ -24,32 +24,32 @@ import java.util.List;
 public class GlowBallItem extends SnowballItem {
 
   public GlowBallItem() {
-    super((new Properties()).maxStackSize(16).group(TinkerGadgets.TAB_GADGETS));
+    super((new Properties()).stacksTo(16).tab(TinkerGadgets.TAB_GADGETS));
   }
 
   @Override
-  public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-    ItemStack itemstack = playerIn.getHeldItem(handIn);
-    if (!playerIn.abilities.isCreativeMode) {
+  public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
+    ItemStack itemstack = playerIn.getItemInHand(handIn);
+    if (!playerIn.abilities.instabuild) {
       itemstack.shrink(1);
     }
 
-    worldIn.playSound((PlayerEntity) null, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
-    if (!worldIn.isRemote) {
+    worldIn.playSound((Player) null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
+    if (!worldIn.isClientSide) {
       GlowballEntity glowballEntity = new GlowballEntity(worldIn, playerIn);
       glowballEntity.setItem(itemstack);
-      glowballEntity.func_234612_a_(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
-      worldIn.addEntity(glowballEntity);
+      glowballEntity.shootFromRotation(playerIn, playerIn.xRot, playerIn.yRot, 0.0F, 1.5F, 1.0F);
+      worldIn.addFreshEntity(glowballEntity);
     }
 
-    playerIn.addStat(Stats.ITEM_USED.get(this));
-    return new ActionResult<>(ActionResultType.SUCCESS, itemstack);
+    playerIn.awardStat(Stats.ITEM_USED.get(this));
+    return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemstack);
   }
 
   @Override
   @OnlyIn(Dist.CLIENT)
-  public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
     TranslationHelper.addOptionalTooltip(stack, tooltip);
-    super.addInformation(stack, worldIn, tooltip, flagIn);
+    super.appendHoverText(stack, worldIn, tooltip, flagIn);
   }
 }

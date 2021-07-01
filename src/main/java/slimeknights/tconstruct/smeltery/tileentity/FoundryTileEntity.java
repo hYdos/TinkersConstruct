@@ -1,7 +1,5 @@
 package slimeknights.tconstruct.smeltery.tileentity;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.text.TranslationTextComponent;
 import slimeknights.tconstruct.common.config.Config;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.materials.MaterialValues;
@@ -14,6 +12,8 @@ import slimeknights.tconstruct.smeltery.tileentity.multiblock.HeatingStructureMu
 import slimeknights.tconstruct.smeltery.tileentity.multiblock.HeatingStructureMultiblock.StructureData;
 
 import javax.annotation.Nullable;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class FoundryTileEntity extends HeatingStructureTileEntity {
   /** Fluid capacity per internal block */
@@ -23,7 +23,7 @@ public class FoundryTileEntity extends HeatingStructureTileEntity {
   private static final int BLOCKS_PER_FUEL = 18;
 
   public FoundryTileEntity() {
-    super(TinkerSmeltery.foundry.get(), new TranslationTextComponent(Util.makeTranslationKey("gui", "foundry")));
+    super(TinkerSmeltery.foundry.get(), new TranslatableComponent(Util.makeTranslationKey("gui", "foundry")));
   }
 
   @Override
@@ -39,7 +39,7 @@ public class FoundryTileEntity extends HeatingStructureTileEntity {
 
   @Override
   protected void heat() {
-    if (structure == null || world == null) {
+    if (structure == null || level == null) {
       return;
     }
 
@@ -80,8 +80,8 @@ public class FoundryTileEntity extends HeatingStructureTileEntity {
           // update the active state
           boolean hasFuel = fuelModule.hasFuel();
           BlockState state = getBlockState();
-          if (state.get(ControllerBlock.ACTIVE) != hasFuel) {
-            world.setBlockState(pos, state.with(ControllerBlock.ACTIVE, hasFuel));
+          if (state.getValue(ControllerBlock.ACTIVE) != hasFuel) {
+            level.setBlockAndUpdate(worldPosition, state.setValue(ControllerBlock.ACTIVE, hasFuel));
           }
           fuelModule.decreaseFuel(fuelRate);
           break;

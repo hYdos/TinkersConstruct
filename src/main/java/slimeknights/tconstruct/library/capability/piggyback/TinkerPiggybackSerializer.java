@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.library.capability.piggyback;
 
 import com.google.common.collect.Maps;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.Direction;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -17,13 +17,13 @@ import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
 
-public class TinkerPiggybackSerializer implements ICapabilitySerializable<CompoundNBT> {
+public class TinkerPiggybackSerializer implements ICapabilitySerializable<CompoundTag> {
 
-  private final PlayerEntity player;
+  private final Player player;
   private final ITinkerPiggyback piggyback;
   private final LazyOptional<ITinkerPiggyback> providerCap;
 
-  public TinkerPiggybackSerializer(@Nonnull PlayerEntity player) {
+  public TinkerPiggybackSerializer(@Nonnull Player player) {
     this.player = player;
     this.piggyback = new TinkerPiggybackHandler();
     this.piggyback.setRiddenPlayer(player);
@@ -40,19 +40,19 @@ public class TinkerPiggybackSerializer implements ICapabilitySerializable<Compou
   }
 
   @Override
-  public CompoundNBT serializeNBT() {
-    CompoundNBT compoundNBT = new CompoundNBT();
-    ListNBT riderList = new ListNBT();
+  public CompoundTag serializeNBT() {
+    CompoundTag compoundNBT = new CompoundTag();
+    ListTag riderList = new ListTag();
 
     // save riders
-    for (Entity entity : this.player.getRecursivePassengers()) {
-      String id = entity.getEntityString();
+    for (Entity entity : this.player.getIndirectPassengers()) {
+      String id = entity.getEncodeId();
       if (id != null && !"".equals(id)) {
-        CompoundNBT entityTag = new CompoundNBT();
-        CompoundNBT entityDataTag = new CompoundNBT();
-        entity.writeWithoutTypeId(entityDataTag);
-        entityDataTag.putString("id", entity.getEntityString());
-        entityTag.putUniqueId("Attach", entity.getRidingEntity().getUniqueID());
+        CompoundTag entityTag = new CompoundTag();
+        CompoundTag entityDataTag = new CompoundTag();
+        entity.saveWithoutId(entityDataTag);
+        entityDataTag.putString("id", entity.getEncodeId());
+        entityTag.putUUID("Attach", entity.getVehicle().getUUID());
         entityTag.put("Entity", entityDataTag);
         riderList.add(entityTag);
       }
@@ -61,28 +61,28 @@ public class TinkerPiggybackSerializer implements ICapabilitySerializable<Compou
     compoundNBT.put("riders", riderList);
 
     if (riderList.isEmpty()) {
-      return new CompoundNBT();
+      return new CompoundTag();
     }
 
     return compoundNBT;
   }
 
   @Override
-  public void deserializeNBT(CompoundNBT nbt) {
-    ListNBT riderList = nbt.getList("riders", 10);
+  public void deserializeNBT(CompoundTag nbt) {
+    ListTag riderList = nbt.getList("riders", 10);
 
     Map<UUID, Entity> attachedTo = Maps.newHashMap();
 
-    if (this.player.getEntityWorld() instanceof ServerWorld) {
-      ServerWorld serverWorld = (ServerWorld) this.player.getEntityWorld();
+    if (this.player.getCommandSenderWorld() instanceof ServerLevel) {
+      ServerLevel serverWorld = (ServerLevel) this.player.getCommandSenderWorld();
 
       for (int i = 0; i < riderList.size(); i++) {
-        CompoundNBT entityTag = riderList.getCompound(i);
-        Entity entity = EntityType.loadEntityAndExecute(entityTag.getCompound("Entity"), serverWorld, (p_217885_1_) -> {
-          return !serverWorld.summonEntity(p_217885_1_) ? null : p_217885_1_;
+        CompoundTag entityTag = riderList.getCompound(i);
+        Entity entity = EntityType.loadEntityRecursive(entityTag.getCompound("Entity"), serverWorld, (p_217885_1_) -> {
+          return !serverWorld.addWithUUID(p_217885_1_) ? null : p_217885_1_;
         });
         if (entity != null) {
-          UUID uuid = entityTag.getUniqueId("Attach");
+          UUID uuid = entityTag.getUUID("Attach");
 
           attachedTo.put(uuid, entity);
         }

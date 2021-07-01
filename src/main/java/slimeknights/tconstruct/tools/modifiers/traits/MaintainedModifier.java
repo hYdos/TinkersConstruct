@@ -1,9 +1,9 @@
 package slimeknights.tconstruct.tools.modifiers.traits;
 
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.modifiers.Modifier;
@@ -18,7 +18,7 @@ import java.util.List;
 
 /** Well maintained for Tinkers Bronze */
 public class MaintainedModifier extends Modifier {
-  private static final ITextComponent MINING_SPEED = Util.makeTranslation("modifier", "fake_attribute.mining_speed");
+  private static final Component MINING_SPEED = Util.makeTranslation("modifier", "fake_attribute.mining_speed");
   private static final ResourceLocation KEY_ORIGINAL_DURABILITY = Util.getResource("durability");
   public MaintainedModifier() {
     super(0xE8B465);
@@ -75,10 +75,10 @@ public class MaintainedModifier extends Modifier {
   }
 
   @Override
-  public void addInformation(IModifierToolStack tool, int level, List<ITextComponent> tooltip, boolean isAdvanced, boolean detailed) {
+  public void addInformation(IModifierToolStack tool, int level, List<Component> tooltip, boolean isAdvanced, boolean detailed) {
     double boost = getTotalBoost(tool, level);
     if (boost != 0) {
-      tooltip.add(applyStyle(new StringTextComponent(Util.dfPercentBoost.format(boost)).appendString(" ").append(MINING_SPEED)));
+      tooltip.add(applyStyle(new TextComponent(Util.dfPercentBoost.format(boost)).append(" ").append(MINING_SPEED)));
     }
   }
 

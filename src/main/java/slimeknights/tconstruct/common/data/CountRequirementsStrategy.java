@@ -1,12 +1,11 @@
 package slimeknights.tconstruct.common.data;
 
-import net.minecraft.advancements.IRequirementsStrategy;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import net.minecraft.advancements.RequirementsStrategy;
 
-public class CountRequirementsStrategy implements IRequirementsStrategy {
+public class CountRequirementsStrategy implements RequirementsStrategy {
   private final int[] sizes;
   public CountRequirementsStrategy(int... sizes) {
     this.sizes = sizes;

@@ -1,10 +1,10 @@
 package slimeknights.tconstruct.library.client.modifiers;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.RenderMaterial;
+import com.mojang.math.Transformation;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.util.math.vector.TransformationMatrix;
+import net.minecraft.client.resources.model.Material;
 import net.minecraftforge.client.model.ItemLayerModel;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
@@ -18,8 +18,8 @@ import java.util.function.Function;
 public class NormalModifierModel implements IBakedModifierModel {
   /** Constant unbaked model instance, as they are all the same */
   public static final IUnbakedModifierModel UNBAKED_INSTANCE = (smallGetter, largeGetter) -> {
-    RenderMaterial smallTexture = smallGetter.apply("");
-    RenderMaterial largeTexture = largeGetter.apply("");
+    Material smallTexture = smallGetter.apply("");
+    Material largeTexture = largeGetter.apply("");
     if (smallTexture != null || largeTexture != null) {
       return new NormalModifierModel(smallTexture, largeTexture);
     }
@@ -27,17 +27,17 @@ public class NormalModifierModel implements IBakedModifierModel {
   };
 
   /** Textures to show */
-  private final RenderMaterial[] textures;
+  private final Material[] textures;
   /** Cache of quads */
   @SuppressWarnings("unchecked")
   private final ImmutableList<BakedQuad>[] quads = new ImmutableList[2];
 
-  public NormalModifierModel(@Nullable RenderMaterial smallTexture, @Nullable RenderMaterial largeTexture) {
-    this.textures = new RenderMaterial[]{ smallTexture, largeTexture };
+  public NormalModifierModel(@Nullable Material smallTexture, @Nullable Material largeTexture) {
+    this.textures = new Material[]{ smallTexture, largeTexture };
   }
 
   @Override
-  public ImmutableList<BakedQuad> getQuads(IModifierToolStack tool, ModifierEntry entry, Function<RenderMaterial,TextureAtlasSprite> spriteGetter, TransformationMatrix transforms, boolean isLarge) {
+  public ImmutableList<BakedQuad> getQuads(IModifierToolStack tool, ModifierEntry entry, Function<Material,TextureAtlasSprite> spriteGetter, Transformation transforms, boolean isLarge) {
     int index = isLarge ? 1 : 0;
     if (quads[index] == null) {
       if (textures[index] == null) {

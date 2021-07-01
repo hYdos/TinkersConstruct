@@ -1,8 +1,8 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.LightLayer;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import slimeknights.tconstruct.library.modifiers.IncrementalModifier;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
@@ -25,7 +25,7 @@ public class LightspeedModifier extends IncrementalModifier {
     }
     BlockPos pos = event.getPos();
     if (pos != null) {
-      int light = event.getPlayer().getEntityWorld().getLightFor(LightType.BLOCK, pos.offset(sideHit));
+      int light = event.getPlayer().getCommandSenderWorld().getBrightness(LightLayer.BLOCK, pos.relative(sideHit));
       // bonus is +9 mining speed at light level 15, +3 at light level 10, +1 at light level 5
       float boost = (float)(level * Math.pow(3, (light - 5) / 5f) * tool.getDefinition().getBaseStatDefinition().getModifier(ToolStats.MINING_SPEED) * miningSpeedModifier);
       event.setNewSpeed(event.getNewSpeed() + boost);

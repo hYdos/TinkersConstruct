@@ -4,13 +4,13 @@ import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.Item;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.ItemLike;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.tconstruct.library.recipe.casting.material.MaterialCastingRecipe.Serializer;
 import slimeknights.tconstruct.library.tinkering.IMaterialItem;
@@ -55,8 +55,8 @@ public class MaterialCastingRecipeBuilder extends AbstractRecipeBuilder<Material
    * @param consumed  If true, cast is consumed
    * @return  Builder instance
    */
-  public MaterialCastingRecipeBuilder setCast(ITag<Item> tag, boolean consumed) {
-    return this.setCast(Ingredient.fromTag(tag), consumed);
+  public MaterialCastingRecipeBuilder setCast(Tag<Item> tag, boolean consumed) {
+    return this.setCast(Ingredient.of(tag), consumed);
   }
 
   /**
@@ -65,8 +65,8 @@ public class MaterialCastingRecipeBuilder extends AbstractRecipeBuilder<Material
    * @param consumed  If true, cast is consumed
    * @return  Builder instance
    */
-  public MaterialCastingRecipeBuilder setCast(IItemProvider item, boolean consumed) {
-    return this.setCast(Ingredient.fromItems(item), consumed);
+  public MaterialCastingRecipeBuilder setCast(ItemLike item, boolean consumed) {
+    return this.setCast(Ingredient.of(item), consumed);
   }
 
   /**
@@ -91,12 +91,12 @@ public class MaterialCastingRecipeBuilder extends AbstractRecipeBuilder<Material
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer) {
+  public void build(Consumer<FinishedRecipe> consumer) {
     this.build(consumer, Objects.requireNonNull(this.result.asItem().getRegistryName()));
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
     if (this.itemCost <= 0) {
       throw new IllegalStateException("Material casting recipes require a positive amount of fluid");
     }
@@ -110,17 +110,17 @@ public class MaterialCastingRecipeBuilder extends AbstractRecipeBuilder<Material
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return recipeSerializer;
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
       if (!group.isEmpty()) {
         json.addProperty("group", group);
       }
       if (cast != Ingredient.EMPTY) {
-        json.add("cast", cast.serialize());
+        json.add("cast", cast.toJson());
         if (consumed) {
           json.addProperty("cast_consumed", true);
         }

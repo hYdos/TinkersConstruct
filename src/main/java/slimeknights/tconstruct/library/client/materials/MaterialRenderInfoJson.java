@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.library.client.materials;
 
 import lombok.Data;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 @Data
 public class MaterialRenderInfoJson {

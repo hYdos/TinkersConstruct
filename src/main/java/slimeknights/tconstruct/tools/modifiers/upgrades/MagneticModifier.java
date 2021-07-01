@@ -1,10 +1,5 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
 import slimeknights.tconstruct.library.modifiers.Modifier;
 import slimeknights.tconstruct.library.tools.helper.ToolAttackContext;
 import slimeknights.tconstruct.library.tools.helper.ToolHarvestContext;
@@ -13,6 +8,11 @@ import slimeknights.tconstruct.tools.TinkerModifiers;
 import slimeknights.tconstruct.tools.modifiers.internal.HarvestAbilityModifier.IHarvestModifier;
 
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class MagneticModifier extends Modifier implements IHarvestModifier {
   public MagneticModifier() {
@@ -35,8 +35,8 @@ public class MagneticModifier extends Modifier implements IHarvestModifier {
   }
 
   @Override
-  public void afterHarvest(IModifierToolStack tool, int level, ItemUseContext context, ServerWorld world, BlockState state, BlockPos pos) {
-    PlayerEntity player = context.getPlayer();
+  public void afterHarvest(IModifierToolStack tool, int level, UseOnContext context, ServerLevel world, BlockState state, BlockPos pos) {
+    Player player = context.getPlayer();
     if (player != null) {
       TinkerModifiers.magneticEffect.get().apply(player, 30, level - 1);
     }

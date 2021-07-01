@@ -1,10 +1,10 @@
 package slimeknights.tconstruct.tables.inventory;
 
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.EmptyHandler;
 import slimeknights.tconstruct.tables.TinkerTables;
@@ -14,27 +14,27 @@ import javax.annotation.Nullable;
 
 public class TinkerChestContainer extends BaseStationContainer<TinkerChestTileEntity> {
   protected SideInventoryContainer<TinkerChestTileEntity> inventory;
-  public TinkerChestContainer(int id, PlayerInventory inv, @Nullable TinkerChestTileEntity tileEntity) {
+  public TinkerChestContainer(int id, Inventory inv, @Nullable TinkerChestTileEntity tileEntity) {
     super(TinkerTables.tinkerChestContainer.get(), id, inv, tileEntity);
     // columns don't matter since they get set by gui
     if (this.tile != null) {
-      this.inventory = new TinkerChestContainer.DynamicChestInventory(TinkerTables.tinkerChestContainer.get(), this.windowId, inv, this.tile, 8, 18, 8);
+      this.inventory = new DynamicChestInventory(TinkerTables.tinkerChestContainer.get(), this.containerId, inv, this.tile, 8, 18, 8);
       this.addSubContainer(inventory, true);
     }
     this.addInventorySlots();
   }
 
-  public TinkerChestContainer(int id, PlayerInventory inv, PacketBuffer buf) {
+  public TinkerChestContainer(int id, Inventory inv, FriendlyByteBuf buf) {
     this(id, inv, getTileEntityFromBuf(buf, TinkerChestTileEntity.class));
   }
 
   /** Resizable inventory */
   public static class DynamicChestInventory extends SideInventoryContainer<TinkerChestTileEntity> {
-    public DynamicChestInventory(ContainerType<?> containerType, int windowId, PlayerInventory inv, TinkerChestTileEntity tile, int x, int y, int columns) {
+    public DynamicChestInventory(MenuType<?> containerType, int windowId, Inventory inv, TinkerChestTileEntity tile, int x, int y, int columns) {
       super(containerType, windowId, inv, tile, x, y, columns);
       // add the theoretically possible slots
-      while (this.inventorySlots.size() < tile.getMaxInventory()) {
-        this.addSlot(this.createSlot(new EmptyHandler(), this.inventorySlots.size(), 0, 0));
+      while (this.slots.size() < tile.getMaxInventory()) {
+        this.addSlot(this.createSlot(new EmptyHandler(), this.slots.size(), 0, 0));
       }
     }
 
@@ -56,8 +56,8 @@ public class TinkerChestContainer extends BaseStationContainer<TinkerChestTileEn
     }
 
     @Override
-    public boolean isItemValid(ItemStack stack) {
-      return this.chest.isItemValidForSlot(this.getSlotIndex(), stack);
+    public boolean mayPlace(ItemStack stack) {
+      return this.chest.canPlaceItem(this.getSlotIndex(), stack);
     }
   }
 }

@@ -1,8 +1,8 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.Rarity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.item.Rarity;
 import slimeknights.tconstruct.library.modifiers.SingleLevelModifier;
 import slimeknights.tconstruct.library.tools.ToolDefinition;
 import slimeknights.tconstruct.library.tools.helper.ToolAttackContext;
@@ -34,7 +34,7 @@ public class EmeraldModifier extends SingleLevelModifier {
   @Override
   public float getEntityDamage(IModifierToolStack tool, int level, ToolAttackContext context, float baseDamage, float damage) {
     LivingEntity living = context.getLivingTarget();
-    if (living != null && living.getCreatureAttribute() == CreatureAttribute.ILLAGER) {
+    if (living != null && living.getMobType() == MobType.ILLAGER) {
       damage += 2.5f;
     }
     return damage;

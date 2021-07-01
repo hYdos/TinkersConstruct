@@ -1,12 +1,12 @@
 package slimeknights.tconstruct.tables.inventory.table;
 
 import lombok.Getter;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import slimeknights.tconstruct.library.utils.LambdaIntReference;
 import slimeknights.tconstruct.tables.TinkerTables;
 import slimeknights.tconstruct.tables.inventory.BaseStationContainer;
@@ -23,7 +23,7 @@ public class PartBuilderContainer extends BaseStationContainer<PartBuilderTileEn
   @Getter
   private final LazyResultSlot outputSlot;
 
-  public PartBuilderContainer(int windowIdIn, PlayerInventory playerInventoryIn, @Nullable PartBuilderTileEntity partBuilderTileEntity) {
+  public PartBuilderContainer(int windowIdIn, Inventory playerInventoryIn, @Nullable PartBuilderTileEntity partBuilderTileEntity) {
     super(TinkerTables.partBuilderContainer.get(), windowIdIn, playerInventoryIn, partBuilderTileEntity);
 
     // unfortunately, nothing works with no tile
@@ -39,7 +39,7 @@ public class PartBuilderContainer extends BaseStationContainer<PartBuilderTileEn
       this.addInventorySlots();
 
       // listen for the button to change in the tile
-      this.trackInt(new LambdaIntReference(-1, tile::getSelectedIndex, i -> {
+      this.addDataSlot(new LambdaIntReference(-1, tile::getSelectedIndex, i -> {
         tile.selectRecipe(i);
         this.updateScreen();
       }));
@@ -52,18 +52,18 @@ public class PartBuilderContainer extends BaseStationContainer<PartBuilderTileEn
     }
   }
 
-  public PartBuilderContainer(int id, PlayerInventory inv, PacketBuffer buf) {
+  public PartBuilderContainer(int id, Inventory inv, FriendlyByteBuf buf) {
     this(id, inv, getTileEntityFromBuf(buf, PartBuilderTileEntity.class));
   }
 
   @Override
-  public void onCraftMatrixChanged(IInventory inventoryIn) {}
+  public void slotsChanged(Container inventoryIn) {}
 
   /**
    * Called when a pattern button is pressed
    */
   @Override
-  public boolean enchantItem(PlayerEntity playerIn, int id) {
+  public boolean clickMenuButton(Player playerIn, int id) {
     if (id >= 0 && tile != null) {
       tile.selectRecipe(id);
     }
@@ -71,8 +71,8 @@ public class PartBuilderContainer extends BaseStationContainer<PartBuilderTileEn
   }
 
   @Override
-  public boolean canMergeSlot(ItemStack stack, Slot slotIn) {
-    return slotIn != this.outputSlot && super.canMergeSlot(stack, slotIn);
+  public boolean canTakeItemForPickAll(ItemStack stack, Slot slotIn) {
+    return slotIn != this.outputSlot && super.canTakeItemForPickAll(stack, slotIn);
   }
 
   /**
@@ -84,7 +84,7 @@ public class PartBuilderContainer extends BaseStationContainer<PartBuilderTileEn
     }
 
     @Override
-    public boolean isItemValid(ItemStack stack) {
+    public boolean mayPlace(ItemStack stack) {
       // TODO: tag
       return stack.getItem() == TinkerTables.pattern.get();
     }

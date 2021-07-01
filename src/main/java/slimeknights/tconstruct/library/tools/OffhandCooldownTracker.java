@@ -1,12 +1,12 @@
 package slimeknights.tconstruct.library.tools;
 
 import lombok.RequiredArgsConstructor;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
@@ -43,12 +43,12 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
     CapabilityManager.INSTANCE.register(OffhandCooldownTracker.class, new IStorage<OffhandCooldownTracker>() {
       @Nullable
       @Override
-      public INBT writeNBT(Capability<OffhandCooldownTracker> capability, OffhandCooldownTracker instance, Direction side) {
+      public Tag writeNBT(Capability<OffhandCooldownTracker> capability, OffhandCooldownTracker instance, Direction side) {
         return null;
       }
 
       @Override
-      public void readNBT(Capability<OffhandCooldownTracker> capability, OffhandCooldownTracker instance, Direction side, INBT nbt) {}
+      public void readNBT(Capability<OffhandCooldownTracker> capability, OffhandCooldownTracker instance, Direction side, Tag nbt) {}
     }, () -> new OffhandCooldownTracker(null));
 
     MinecraftForge.EVENT_BUS.addGenericListener(Entity.class, OffhandCooldownTracker::attachCapability);
@@ -60,8 +60,8 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
    */
   private static void attachCapability(AttachCapabilitiesEvent<Entity> event) {
     Entity entity = event.getObject();
-    if (entity instanceof PlayerEntity) {
-      event.addCapability(KEY, new OffhandCooldownTracker((PlayerEntity) entity));
+    if (entity instanceof Player) {
+      event.addCapability(KEY, new OffhandCooldownTracker((Player) entity));
     }
   }
 
@@ -69,7 +69,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
   private final LazyOptional<OffhandCooldownTracker> capabilityInstance = LazyOptional.of(() -> this);
   /** Player receiving cooldowns */
   @Nullable
-  private final PlayerEntity player;
+  private final Player player;
   /** Scale of the last cooldown */
   private int lastCooldown = 0;
   /** Time in ticks when the player can next attack for full power */
@@ -85,7 +85,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
     if (player == null) {
       return 0;
     }
-    return player.ticksExisted;
+    return player.tickCount;
   }
 
   /**
@@ -98,7 +98,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
   }
 
   /**
-   * Returns a number from 0 to 1 denoting the current cooldown amount, akin to {@link PlayerEntity#getCooledAttackStrength(float)}
+   * Returns a number from 0 to 1 denoting the current cooldown amount, akin to {@link Player#getAttackStrengthScale(float)}
    * @return  number from 0 to 1, with 1 being no cooldown
    */
   public float getCooldown() {
@@ -106,7 +106,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
     if (ticksExisted > this.attackReady || this.lastCooldown == 0) {
       return 1.0f;
     }
-    return MathHelper.clamp((this.lastCooldown + ticksExisted - this.attackReady) / (float) this.lastCooldown, 0f, 1f);
+    return Mth.clamp((this.lastCooldown + ticksExisted - this.attackReady) / (float) this.lastCooldown, 0f, 1f);
   }
 
   /**
@@ -125,7 +125,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
    * @param player  Player
    * @return  Offhand cooldown
    */
-  public static float getCooldown(PlayerEntity player) {
+  public static float getCooldown(Player player) {
     return player.getCapability(CAPABILITY).map(COOLDOWN_TRACKER).orElse(1.0f);
   }
 
@@ -134,7 +134,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
    * @param player  Player
    * @param cooldown  Cooldown to apply
    */
-  public static void applyCooldown(PlayerEntity player, int cooldown) {
+  public static void applyCooldown(Player player, int cooldown) {
     player.getCapability(CAPABILITY).ifPresent(cap -> cap.applyCooldown(cooldown));
   }
 
@@ -142,7 +142,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
    * Applies cooldown to the given player
    * @param player  Player
    */
-  public static boolean isAttackReady(PlayerEntity player) {
+  public static boolean isAttackReady(Player player) {
     return player.getCapability(CAPABILITY).map(ATTACK_READY).orElse(true);
   }
 
@@ -151,7 +151,7 @@ public class OffhandCooldownTracker implements ICapabilityProvider {
    * @param toolStack     Tool instance
    * @param cooldownTime  Relative cooldown time for the given source, 20 is vanilla
    */
-  public static void applyCooldown(PlayerEntity player, IModifierToolStack toolStack, int cooldownTime) {
+  public static void applyCooldown(Player player, IModifierToolStack toolStack, int cooldownTime) {
     applyCooldown(player, Math.round(cooldownTime / toolStack.getStats().getFloat(ToolStats.ATTACK_SPEED)));
   }
 }

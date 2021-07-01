@@ -1,12 +1,12 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.DamageSource;
 import slimeknights.tconstruct.library.modifiers.SingleLevelModifier;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
 
 import javax.annotation.Nullable;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 
 public class LootingModifier extends SingleLevelModifier {
   public LootingModifier() {

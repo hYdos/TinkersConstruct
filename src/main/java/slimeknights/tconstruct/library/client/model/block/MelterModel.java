@@ -2,15 +2,14 @@ package slimeknights.tconstruct.library.client.model.block;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.IModelTransform;
-import net.minecraft.client.renderer.model.ItemOverrideList;
-import net.minecraft.client.renderer.model.ModelBakery;
-import net.minecraft.client.renderer.model.RenderMaterial;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.ModelBakery;
+import net.minecraft.client.resources.model.ModelState;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.GsonHelper;
 import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.IModelLoader;
 import slimeknights.mantle.client.model.inventory.ModelItem;
@@ -35,10 +34,10 @@ public class MelterModel extends TankModel {
   }
 
   @Override
-  public IBakedModel bake(IModelConfiguration owner, ModelBakery bakery, Function<RenderMaterial,TextureAtlasSprite> spriteGetter, IModelTransform transform, ItemOverrideList overrides, ResourceLocation location) {
-    IBakedModel baked = model.bakeModel(owner, transform, overrides, spriteGetter, location);
+  public net.minecraft.client.resources.model.BakedModel bake(IModelConfiguration owner, ModelBakery bakery, Function<Material,TextureAtlasSprite> spriteGetter, ModelState transform, ItemOverrides overrides, ResourceLocation location) {
+    net.minecraft.client.resources.model.BakedModel baked = model.bakeModel(owner, transform, overrides, spriteGetter, location);
     // bake the GUI model if present
-    IBakedModel bakedGui = baked;
+    net.minecraft.client.resources.model.BakedModel bakedGui = baked;
     if (gui != null) {
       bakedGui = gui.bakeModel(owner, transform, overrides, spriteGetter, location);
     }
@@ -48,7 +47,7 @@ public class MelterModel extends TankModel {
   /** Baked variant to allow access to items */
   public static final class BakedModel extends TankModel.BakedModel<MelterModel> {
     @SuppressWarnings("WeakerAccess")
-    protected BakedModel(IModelConfiguration owner, IModelTransform transforms, IBakedModel baked, IBakedModel gui, MelterModel original) {
+    protected BakedModel(IModelConfiguration owner, ModelState transforms, net.minecraft.client.resources.model.BakedModel baked, net.minecraft.client.resources.model.BakedModel gui, MelterModel original) {
       super(owner, transforms, baked, gui, original);
     }
 
@@ -64,16 +63,16 @@ public class MelterModel extends TankModel {
   /** Loader for this model */
   public static class Loader implements IModelLoader<TankModel> {
     @Override
-    public void onResourceManagerReload(IResourceManager resourceManager) {}
+    public void onResourceManagerReload(ResourceManager resourceManager) {}
 
     @Override
     public TankModel read(JsonDeserializationContext deserializationContext, JsonObject modelContents) {
       SimpleBlockModel model = SimpleBlockModel.deserialize(deserializationContext, modelContents);
       SimpleBlockModel gui = null;
       if (modelContents.has("gui")) {
-        gui = SimpleBlockModel.deserialize(deserializationContext, JSONUtils.getJsonObject(modelContents, "gui"));
+        gui = SimpleBlockModel.deserialize(deserializationContext, GsonHelper.getAsJsonObject(modelContents, "gui"));
       }
-      IncrementalFluidCuboid fluid = IncrementalFluidCuboid.fromJson(JSONUtils.getJsonObject(modelContents, "fluid"));
+      IncrementalFluidCuboid fluid = IncrementalFluidCuboid.fromJson(GsonHelper.getAsJsonObject(modelContents, "fluid"));
       List<ModelItem> items = ModelItem.listFromJson(modelContents, "items");
       return new MelterModel(model, gui, fluid, items);
     }

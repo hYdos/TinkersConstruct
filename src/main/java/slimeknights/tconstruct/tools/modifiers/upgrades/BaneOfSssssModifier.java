@@ -1,21 +1,21 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.tools.helper.ToolAttackContext;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
 
 public class BaneOfSssssModifier extends ScaledTypeDamageModifier {
   public BaneOfSssssModifier() {
-    super(0xD39A88, CreatureAttribute.ARTHROPOD);
+    super(0xD39A88, MobType.ARTHROPOD);
   }
 
   @Override
   protected boolean isEffective(LivingEntity target) {
-    return super.isEffective(target) || target.getType().isContained(TinkerTags.EntityTypes.CREEPERS);
+    return super.isEffective(target) || target.getType().is(TinkerTags.EntityTypes.CREEPERS);
   }
 
   @Override
@@ -27,7 +27,7 @@ public class BaneOfSssssModifier extends ScaledTypeDamageModifier {
       if (maxBonus > 0) {
         duration += context.getAttacker().getRNG().nextInt(maxBonus);
       }
-      target.addPotionEffect(new EffectInstance(Effects.SLOWNESS, duration, 3));
+      target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 3));
     }
     return 0;
   }

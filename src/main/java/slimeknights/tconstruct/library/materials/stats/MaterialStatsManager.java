@@ -8,8 +8,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import lombok.extern.log4j.Log4j2;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.data.MergingJsonDataLoader;
 import slimeknights.tconstruct.library.exception.TinkerAPIMaterialException;
@@ -150,7 +150,7 @@ public class MaterialStatsManager extends MergingJsonDataLoader<Map<ResourceLoca
   public void updateMaterialStatsFromServer(Map<MaterialId, Collection<IMaterialStats>> materialStats) {
     this.materialToStatsPerType = materialStats.entrySet().stream()
       .collect(Collectors.toMap(
-        Map.Entry::getKey,
+        Entry::getKey,
         entry -> entry.getValue().stream()
           .collect(Collectors.toMap(
             IMaterialStats::getIdentifier,
@@ -169,7 +169,7 @@ public class MaterialStatsManager extends MergingJsonDataLoader<Map<ResourceLoca
   }
 
   @Override
-  protected void finishLoad(Map<ResourceLocation,Map<ResourceLocation, JsonObject>> map, IResourceManager manager) {
+  protected void finishLoad(Map<ResourceLocation,Map<ResourceLocation, JsonObject>> map, ResourceManager manager) {
     // Take the final structure and actually load the different material stats. This drops all invalid stats
     materialToStatsPerType = map.entrySet().stream()
                                 .collect(Collectors.toMap(
@@ -194,7 +194,7 @@ public class MaterialStatsManager extends MergingJsonDataLoader<Map<ResourceLoca
     Map<MaterialId, Collection<IMaterialStats>> networkPayload =
       materialToStatsPerType.entrySet().stream()
                             .collect(Collectors.toMap(
-                              Map.Entry::getKey,
+                              Entry::getKey,
                               entry -> entry.getValue().values()));
     return new UpdateMaterialStatsPacket(networkPayload);
   }

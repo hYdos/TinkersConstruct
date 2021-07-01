@@ -2,7 +2,7 @@ package slimeknights.tconstruct.library;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

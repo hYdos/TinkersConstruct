@@ -1,45 +1,45 @@
 package slimeknights.tconstruct.world.entity;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.monster.SlimeEntity;
-import net.minecraft.particles.IParticleData;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.level.Level;
 import slimeknights.tconstruct.world.TinkerWorld;
 
-public class EnderSlimeEntity extends SlimeEntity {
-  public EnderSlimeEntity(EntityType<? extends EnderSlimeEntity> type, World worldIn) {
+public class EnderSlimeEntity extends Slime {
+  public EnderSlimeEntity(EntityType<? extends EnderSlimeEntity> type, Level worldIn) {
     super(type, worldIn);
   }
 
   @Override
-  protected IParticleData getSquishParticle() {
+  protected ParticleOptions getParticleType() {
     return TinkerWorld.enderSlimeParticle.get();
   }
 
   /** Randomly teleports an entity, mostly copied from chorus fruit */
   private static void teleport(LivingEntity living) {
-    double posX = living.getPosX();
-    double posY = living.getPosY();
-    double posZ = living.getPosZ();
+    double posX = living.getX();
+    double posY = living.getY();
+    double posZ = living.getZ();
 
     for(int i = 0; i < 16; ++i) {
-      double x = posX + (living.getRNG().nextDouble() - 0.5D) * 16.0D;
-      double y = MathHelper.clamp(posY + (double)(living.getRNG().nextInt(16) - 8), 0.0D, living.getEntityWorld().func_234938_ad_() - 1);
-      double z = posZ + (living.getRNG().nextDouble() - 0.5D) * 16.0D;
+      double x = posX + (living.getRandom().nextDouble() - 0.5D) * 16.0D;
+      double y = Mth.clamp(posY + (double)(living.getRandom().nextInt(16) - 8), 0.0D, living.getCommandSenderWorld().getHeight() - 1);
+      double z = posZ + (living.getRandom().nextDouble() - 0.5D) * 16.0D;
       if (living.isPassenger()) {
         living.stopRiding();
       }
 
-      if (living.attemptTeleport(x, y, z, true)) {
-        SoundEvent soundevent = SoundEvents.ENTITY_ENDERMAN_TELEPORT; // TODO: unique sound
-        living.getEntityWorld().playSound(null, posX, posY, posZ, soundevent, SoundCategory.PLAYERS, 1.0F, 1.0F);
+      if (living.randomTeleport(x, y, z, true)) {
+        SoundEvent soundevent = SoundEvents.ENDERMAN_TELEPORT; // TODO: unique sound
+        living.getCommandSenderWorld().playSound(null, posX, posY, posZ, soundevent, SoundSource.PLAYERS, 1.0F, 1.0F);
         living.playSound(soundevent, 1.0F, 1.0F);
         break;
       }
@@ -47,17 +47,17 @@ public class EnderSlimeEntity extends SlimeEntity {
   }
 
   @Override
-  public void applyEnchantments(LivingEntity slime, Entity target) {
-    super.applyEnchantments(slime, target);
+  public void doEnchantDamageEffects(LivingEntity slime, Entity target) {
+    super.doEnchantDamageEffects(slime, target);
     if (target instanceof LivingEntity) {
       teleport((LivingEntity) target);
     }
   }
 
   @Override
-  protected void damageEntity(DamageSource damageSrc, float damageAmount) {
+  protected void actuallyHurt(DamageSource damageSrc, float damageAmount) {
     float oldHealth = getHealth();
-    super.damageEntity(damageSrc, damageAmount);
+    super.actuallyHurt(damageSrc, damageAmount);
     if (isAlive() && getHealth() < oldHealth) {
       teleport(this);
     }

@@ -1,16 +1,16 @@
 package slimeknights.tconstruct.tools.item.broad;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import slimeknights.tconstruct.library.tools.ToolDefinition;
 import slimeknights.tconstruct.library.tools.helper.ToolAttackContext;
 import slimeknights.tconstruct.library.tools.helper.ToolAttackUtil;
@@ -24,7 +24,7 @@ public class ScytheTool extends KamaTool {
   /** Tool harvest logic to damage when breaking instant break blocks */
   public static final ToolHarvestLogic HARVEST_LOGIC = new HarvestLogic(3, true) {
     @Override
-    public Iterable<BlockPos> getAOEBlocks(IModifierToolStack tool, ItemStack stack, PlayerEntity player, BlockState state, World world, BlockPos origin, Direction sideHit, AOEMatchType matchType) {
+    public Iterable<BlockPos> getAOEBlocks(IModifierToolStack tool, ItemStack stack, Player player, BlockState state, Level world, BlockPos origin, Direction sideHit, AOEMatchType matchType) {
       // include depth in boost
       int expanded = tool.getModifierLevel(TinkerModifiers.expanded.get());
       int sides = (expanded + 1) / 2;
@@ -50,17 +50,17 @@ public class ScytheTool extends KamaTool {
       double range = 3 + tool.getModifierLevel(TinkerModifiers.expanded.get());
       LivingEntity attacker = context.getAttacker();
       Entity target = context.getTarget();
-      for (LivingEntity aoeTarget : attacker.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(range, 0.25D, range))) {
-        if (aoeTarget != attacker && aoeTarget != target && !attacker.isOnSameTeam(aoeTarget)
-            && (!(aoeTarget instanceof ArmorStandEntity) || !((ArmorStandEntity) aoeTarget).hasMarker()) && attacker.getDistanceSq(aoeTarget) < 8.0D + range) {
-          aoeTarget.applyKnockback(0.4F, MathHelper.sin(attacker.rotationYaw * ((float) Math.PI / 180F)), -MathHelper.cos(attacker.rotationYaw * ((float) Math.PI / 180F)));
+      for (LivingEntity aoeTarget : attacker.getCommandSenderWorld().getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(range, 0.25D, range))) {
+        if (aoeTarget != attacker && aoeTarget != target && !attacker.isAlliedTo(aoeTarget)
+            && (!(aoeTarget instanceof ArmorStand) || !((ArmorStand) aoeTarget).isMarker()) && attacker.distanceToSqr(aoeTarget) < 8.0D + range) {
+          aoeTarget.knockback(0.4F, Mth.sin(attacker.yRot * ((float) Math.PI / 180F)), -Mth.cos(attacker.yRot * ((float) Math.PI / 180F)));
           hit |= ToolAttackUtil.extraEntityAttack(this, tool, attacker, context.getHand(), aoeTarget);
         }
       }
 
-      attacker.world.playSound(null, attacker.getPosX(), attacker.getPosY(), attacker.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, attacker.getSoundCategory(), 1.0F, 1.0F);
-      if (attacker instanceof PlayerEntity) {
-        ((PlayerEntity) attacker).spawnSweepParticles();
+      attacker.level.playSound(null, attacker.getX(), attacker.getY(), attacker.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, attacker.getSoundSource(), 1.0F, 1.0F);
+      if (attacker instanceof Player) {
+        ((Player) attacker).sweepAttack();
       }
     }
 

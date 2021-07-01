@@ -2,13 +2,12 @@ package slimeknights.tconstruct.library.recipe.molding;
 
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.Item;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.ItemLike;
 import slimeknights.mantle.recipe.ItemOutput;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.tconstruct.smeltery.TinkerSmeltery;
@@ -30,7 +29,7 @@ public class MoldingRecipeBuilder extends AbstractRecipeBuilder<MoldingRecipeBui
    * @param item  Item output
    * @return  Recipe
    */
-  public static MoldingRecipeBuilder moldingTable(IItemProvider item) {
+  public static MoldingRecipeBuilder moldingTable(ItemLike item) {
     return molding(ItemOutput.fromItem(item), TinkerSmeltery.moldingTableSerializer.get());
   }
 
@@ -39,7 +38,7 @@ public class MoldingRecipeBuilder extends AbstractRecipeBuilder<MoldingRecipeBui
    * @param item  Item output
    * @return  Recipe
    */
-  public static MoldingRecipeBuilder moldingBasin(IItemProvider item) {
+  public static MoldingRecipeBuilder moldingBasin(ItemLike item) {
     return molding(ItemOutput.fromItem(item), TinkerSmeltery.moldingBasinSerializer.get());
   }
 
@@ -52,13 +51,13 @@ public class MoldingRecipeBuilder extends AbstractRecipeBuilder<MoldingRecipeBui
   }
 
   /** Sets the material item, on the table */
-  public MoldingRecipeBuilder setMaterial(IItemProvider item) {
-    return setMaterial(Ingredient.fromItems(item));
+  public MoldingRecipeBuilder setMaterial(ItemLike item) {
+    return setMaterial(Ingredient.of(item));
   }
 
   /** Sets the material item, on the table */
-  public MoldingRecipeBuilder setMaterial(ITag<Item> tag) {
-    return setMaterial(Ingredient.fromTag(tag));
+  public MoldingRecipeBuilder setMaterial(Tag<Item> tag) {
+    return setMaterial(Ingredient.of(tag));
   }
 
   /** Sets the mold item, in the players hand */
@@ -69,25 +68,25 @@ public class MoldingRecipeBuilder extends AbstractRecipeBuilder<MoldingRecipeBui
   }
 
   /** Sets the mold item, in the players hand */
-  public MoldingRecipeBuilder setPattern(IItemProvider item, boolean consumed) {
-    return setPattern(Ingredient.fromItems(item), consumed);
+  public MoldingRecipeBuilder setPattern(ItemLike item, boolean consumed) {
+    return setPattern(Ingredient.of(item), consumed);
   }
 
   /** Sets the mold item, in the players hand */
-  public MoldingRecipeBuilder setPattern(ITag<Item> tag, boolean consumed) {
-    return setPattern(Ingredient.fromTag(tag), consumed);
+  public MoldingRecipeBuilder setPattern(Tag<Item> tag, boolean consumed) {
+    return setPattern(Ingredient.of(tag), consumed);
   }
 
 
   /* Building */
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer) {
     build(consumer, Objects.requireNonNull(output.get().getItem().getRegistryName()));
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer, ResourceLocation id) {
     if (material == Ingredient.EMPTY) {
       throw new IllegalStateException("Missing material for molding recipe");
     }
@@ -101,10 +100,10 @@ public class MoldingRecipeBuilder extends AbstractRecipeBuilder<MoldingRecipeBui
     }
 
     @Override
-    public void serialize(JsonObject json) {
-      json.add("material", material.serialize());
+    public void serializeRecipeData(JsonObject json) {
+      json.add("material", material.toJson());
       if (pattern != Ingredient.EMPTY) {
-        json.add("pattern", pattern.serialize());
+        json.add("pattern", pattern.toJson());
         if (patternConsumed) {
           json.addProperty("pattern_consumed", true);
         }
@@ -113,7 +112,7 @@ public class MoldingRecipeBuilder extends AbstractRecipeBuilder<MoldingRecipeBui
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return serializer;
     }
   }

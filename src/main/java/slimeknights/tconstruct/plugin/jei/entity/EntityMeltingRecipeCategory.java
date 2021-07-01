@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.plugin.jei.entity;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
@@ -16,15 +16,15 @@ import mezz.jei.api.gui.ingredient.ITooltipCallback;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SpawnEggItem;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.ForgeI18n;
 import slimeknights.tconstruct.library.Util;
@@ -48,7 +48,7 @@ public class EntityMeltingRecipeCategory implements IRecipeCategory<EntityMeltin
   public static final ResourceLocation BACKGROUND_LOC = Util.getResource("textures/gui/jei/melting.png");
   private static final String KEY_TITLE = Util.makeTranslationKey("jei", "entity_melting.title");
   private static final String KEY_PER_HEARTS = Util.makeTranslationKey("jei", "entity_melting.per_hearts");
-  private static final ITextComponent TOOLTIP_PER_HEART = new TranslationTextComponent(Util.makeTranslationKey("jei", "entity_melting.per_heart")).mergeStyle(TextFormatting.GRAY);
+  private static final Component TOOLTIP_PER_HEART = new TranslatableComponent(Util.makeTranslationKey("jei", "entity_melting.per_heart")).withStyle(ChatFormatting.GRAY);
 
   private static final Int2ObjectMap<ITooltipCallback<FluidStack>> TOOLTIP_MAP = new Int2ObjectOpenHashMap<>();
 
@@ -88,7 +88,7 @@ public class EntityMeltingRecipeCategory implements IRecipeCategory<EntityMeltin
    * @return  Input item stack list
    */
   public static List<List<ItemStack>> getSpawnEggs(Stream<EntityType<?>> entities) {
-    return ImmutableList.of(entities.map(SpawnEggItem::getEgg).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList()));
+    return ImmutableList.of(entities.map(SpawnEggItem::byId).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList()));
   }
 
   @Override
@@ -99,14 +99,14 @@ public class EntityMeltingRecipeCategory implements IRecipeCategory<EntityMeltin
   }
 
   @Override
-  public void draw(EntityMeltingRecipe recipe, MatrixStack matrices, double mouseX, double mouseY) {
+  public void draw(EntityMeltingRecipe recipe, PoseStack matrices, double mouseX, double mouseY) {
     arrow.draw(matrices, 71, 21);
 
     // draw damage string next to the heart icon
     String damage = Float.toString(recipe.getDamage() / 2f);
-    FontRenderer fontRenderer = Minecraft.getInstance().fontRenderer;
-    int x = 84 - fontRenderer.getStringWidth(damage);
-    fontRenderer.drawString(matrices, damage, x, 8, Color.RED.getRGB());
+    Font fontRenderer = Minecraft.getInstance().font;
+    int x = 84 - fontRenderer.width(damage);
+    fontRenderer.draw(matrices, damage, x, 8, Color.RED.getRGB());
   }
 
   @Override
@@ -134,9 +134,9 @@ public class EntityMeltingRecipeCategory implements IRecipeCategory<EntityMeltin
     private final int damage;
 
     @Override
-    public void onTooltip(int index, boolean input, FluidStack fluid, List<ITextComponent> list) {
-      ITextComponent name = list.get(0);
-      ITextComponent modId = list.get(list.size() - 1);
+    public void onTooltip(int index, boolean input, FluidStack fluid, List<Component> list) {
+      Component name = list.get(0);
+      Component modId = list.get(list.size() - 1);
       list.clear();
       list.add(name);
       // add fluid units
@@ -148,7 +148,7 @@ public class EntityMeltingRecipeCategory implements IRecipeCategory<EntityMeltin
         if (damage == 2) {
           list.add(TOOLTIP_PER_HEART);
         } else {
-          list.add(new TranslationTextComponent(KEY_PER_HEARTS, damage / 2f).mergeStyle(TextFormatting.GRAY));
+          list.add(new TranslatableComponent(KEY_PER_HEARTS, damage / 2f).withStyle(ChatFormatting.GRAY));
         }
       }
       list.add(modId);

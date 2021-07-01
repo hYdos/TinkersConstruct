@@ -5,14 +5,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.ItemLike;
 import slimeknights.tconstruct.library.modifiers.Modifier;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.tools.TinkerModifiers;
@@ -80,8 +79,8 @@ public class IncrementalModifierRecipeBuilder extends AbstractModifierRecipeBuil
    * @param neededPerLevel Total number needed for this modifier
    * @return  Builder instance
    */
-  public IncrementalModifierRecipeBuilder setInput(IItemProvider item, int amountPerItem, int neededPerLevel) {
-    return setInput(Ingredient.fromItems(item), amountPerItem, neededPerLevel);
+  public IncrementalModifierRecipeBuilder setInput(ItemLike item, int amountPerItem, int neededPerLevel) {
+    return setInput(Ingredient.of(item), amountPerItem, neededPerLevel);
   }
 
   /**
@@ -91,12 +90,12 @@ public class IncrementalModifierRecipeBuilder extends AbstractModifierRecipeBuil
    * @param neededPerLevel Total number needed for this modifier
    * @return  Builder instance
    */
-  public IncrementalModifierRecipeBuilder setInput(ITag<Item> tag, int amountPerItem, int neededPerLevel) {
-    return setInput(Ingredient.fromTag(tag), amountPerItem, neededPerLevel);
+  public IncrementalModifierRecipeBuilder setInput(Tag<Item> tag, int amountPerItem, int neededPerLevel) {
+    return setInput(Ingredient.of(tag), amountPerItem, neededPerLevel);
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer, ResourceLocation id) {
     if (input == Ingredient.EMPTY) {
       throw new IllegalStateException("Must set input");
     }
@@ -132,18 +131,18 @@ public class IncrementalModifierRecipeBuilder extends AbstractModifierRecipeBuil
     }
 
     @Override
-    public void serialize(JsonObject json) {
-      json.add("input", input.serialize());
+    public void serializeRecipeData(JsonObject json) {
+      json.add("input", input.toJson());
       json.addProperty("amount_per_item", amountPerItem);
       json.addProperty("needed_per_level", neededPerLevel);
       if (leftover != ItemStack.EMPTY) {
         json.add("leftover", serializeResult(leftover));
       }
-      super.serialize(json);
+      super.serializeRecipeData(json);
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return TinkerModifiers.incrementalModifierSerializer.get();
     }
   }

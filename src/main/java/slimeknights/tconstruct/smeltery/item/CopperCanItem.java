@@ -1,16 +1,16 @@
 package slimeknights.tconstruct.smeltery.item;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -31,7 +31,7 @@ public class CopperCanItem extends Item {
   }
 
   @Override
-  public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundNBT nbt) {
+  public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
     return new CopperCanFluidHandler(stack);
   }
 
@@ -51,12 +51,12 @@ public class CopperCanItem extends Item {
 
   @Override
   @OnlyIn(Dist.CLIENT)
-  public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
     Fluid fluid = getFluid(stack);
     if (fluid != Fluids.EMPTY) {
-      tooltip.add(new TranslationTextComponent(this.getTranslationKey() + ".contents", new TranslationTextComponent(fluid.getAttributes().getTranslationKey())).mergeStyle(TextFormatting.GRAY));
+      tooltip.add(new TranslatableComponent(this.getDescriptionId() + ".contents", new TranslatableComponent(fluid.getAttributes().getTranslationKey())).withStyle(ChatFormatting.GRAY));
     } else {
-      tooltip.add(new TranslationTextComponent(this.getTranslationKey() + ".tooltip").mergeStyle(TextFormatting.GRAY));
+      tooltip.add(new TranslatableComponent(this.getDescriptionId() + ".tooltip").withStyle(ChatFormatting.GRAY));
     }
   }
 
@@ -64,7 +64,7 @@ public class CopperCanItem extends Item {
   public static ItemStack setFluid(ItemStack stack, Fluid fluid) {
     // if empty, try to remove the NBT, helps with recipes
     if (fluid == Fluids.EMPTY) {
-      CompoundNBT nbt = stack.getTag();
+      CompoundTag nbt = stack.getTag();
       if (nbt != null) {
         nbt.remove(TAG_FLUID);
         if (nbt.isEmpty()) {
@@ -72,7 +72,7 @@ public class CopperCanItem extends Item {
         }
       }
     } else {
-      CompoundNBT nbt = stack.getOrCreateTag();
+      CompoundTag nbt = stack.getOrCreateTag();
       nbt.putString(TAG_FLUID, Objects.requireNonNull(fluid.getRegistryName()).toString());
     }
     return stack;
@@ -80,9 +80,9 @@ public class CopperCanItem extends Item {
 
   /** Gets the fluid from the given stack */
   public static Fluid getFluid(ItemStack stack) {
-    CompoundNBT nbt = stack.getTag();
+    CompoundTag nbt = stack.getTag();
     if (nbt != null) {
-      ResourceLocation location = ResourceLocation.tryCreate(nbt.getString(TAG_FLUID));
+      ResourceLocation location = ResourceLocation.tryParse(nbt.getString(TAG_FLUID));
       if (location != null && ForgeRegistries.FLUIDS.containsKey(location)) {
         Fluid fluid = ForgeRegistries.FLUIDS.getValue(location);
         if (fluid != null) {
@@ -99,7 +99,7 @@ public class CopperCanItem extends Item {
    * @return  String variant name
    */
   public static String getSubtype(ItemStack stack) {
-    CompoundNBT nbt = stack.getTag();
+    CompoundTag nbt = stack.getTag();
     if (nbt != null) {
       return nbt.getString(TAG_FLUID);
     }

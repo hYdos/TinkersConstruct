@@ -1,10 +1,10 @@
 package slimeknights.tconstruct.library.recipe.tinkerstation;
 
-import net.minecraft.item.ItemStack;
 import slimeknights.mantle.recipe.inventory.IEmptyInventory;
 import slimeknights.tconstruct.library.recipe.material.MaterialRecipe;
 
 import javax.annotation.Nullable;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Inventory interface for all Tinker Station containers to use

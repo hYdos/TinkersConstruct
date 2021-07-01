@@ -1,17 +1,17 @@
 package slimeknights.tconstruct.tools.modifiers.internal;
 
 import lombok.Getter;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.TripWireBlock;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.TripWireBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.IForgeShearable;
 import net.minecraftforge.eventbus.api.Event.Result;
 import slimeknights.tconstruct.library.modifiers.SingleUseModifier;
@@ -44,9 +44,9 @@ public class ShearsAbilityModifier extends SingleUseModifier {
    * @param player the current player
    * @param hand the given hand the tool is in
    */
-  protected void swingTool(PlayerEntity player, Hand hand) {
-    player.swingArm(hand);
-    player.spawnSweepParticles();
+  protected void swingTool(Player player, InteractionHand hand) {
+    player.swing(hand);
+    player.sweepAttack();
   }
 
   /**
@@ -59,16 +59,16 @@ public class ShearsAbilityModifier extends SingleUseModifier {
   }
 
   @Override
-  public ActionResultType onEntityUseFirst(IModifierToolStack tool, int level, PlayerEntity player, Entity target, Hand hand) {
+  public InteractionResult onEntityUseFirst(IModifierToolStack tool, int level, Player player, Entity target, InteractionHand hand) {
     if (tool.isBroken()) {
-      return ActionResultType.PASS;
+      return InteractionResult.PASS;
     }
-    ItemStack stack = player.getHeldItem(hand);
+    ItemStack stack = player.getItemInHand(hand);
 
     // use looting instead of fortune, as that is our hook with entity access
     // modifier can always use tags or the nullable parameter to distinguish if needed
     int looting = ModifierUtil.getLootingLevel(tool, player, target, null);
-    World world = player.getEntityWorld();
+    Level world = player.getCommandSenderWorld();
     if (isShears(tool) && this.shearEntity(stack, tool, world, player, target, looting)) {
       ToolDamageUtil.damageAnimated(tool, 1, player, hand);
       this.swingTool(player, hand);
@@ -76,8 +76,8 @@ public class ShearsAbilityModifier extends SingleUseModifier {
       // AOE shearing
       int expanded = range + tool.getModifierLevel(TinkerModifiers.expanded.get());
       if (expanded > 0) {
-        for (LivingEntity aoeTarget : player.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(expanded, 0.25D, expanded))) {
-          if (aoeTarget != player && aoeTarget != target && (!(aoeTarget instanceof ArmorStandEntity) || !((ArmorStandEntity) aoeTarget).hasMarker())) {
+        for (LivingEntity aoeTarget : player.getCommandSenderWorld().getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(expanded, 0.25D, expanded))) {
+          if (aoeTarget != player && aoeTarget != target && (!(aoeTarget instanceof ArmorStand) || !((ArmorStand) aoeTarget).isMarker())) {
             if (this.shearEntity(stack, tool, world, player, aoeTarget, looting)) {
               if (ToolDamageUtil.damageAnimated(tool, 1, player, hand)) {
                 break;
@@ -87,10 +87,10 @@ public class ShearsAbilityModifier extends SingleUseModifier {
         }
       }
 
-      return ActionResultType.SUCCESS;
+      return InteractionResult.SUCCESS;
     }
 
-    return ActionResultType.PASS;
+    return InteractionResult.PASS;
   }
 
   /**
@@ -103,7 +103,7 @@ public class ShearsAbilityModifier extends SingleUseModifier {
    * @param fortune the fortune to apply to the sheared entity
    * @return if the sheering of the entity was performed or not
    */
-  private boolean shearEntity(ItemStack itemStack, IModifierToolStack tool, World world, PlayerEntity player, Entity entity, int fortune) {
+  private boolean shearEntity(ItemStack itemStack, IModifierToolStack tool, Level world, Player player, Entity entity, int fortune) {
     // event to override entity shearing
     Result result = new ToolShearEvent(itemStack, tool, world, player, entity, fortune).fire();
     if (result != Result.DEFAULT) {
@@ -112,9 +112,9 @@ public class ShearsAbilityModifier extends SingleUseModifier {
     // fallback to forge shearable
     if (entity instanceof IForgeShearable) {
       IForgeShearable target = (IForgeShearable) entity;
-      if (target.isShearable(itemStack, world, entity.getPosition())) {
-        if (!world.isRemote) {
-          target.onSheared(player, itemStack, world, entity.getPosition(), fortune)
+      if (target.isShearable(itemStack, world, entity.blockPosition())) {
+        if (!world.isClientSide) {
+          target.onSheared(player, itemStack, world, entity.blockPosition(), fortune)
                 .forEach(stack -> ToolShearEvent.dropItem(entity, stack));
         }
         return true;
@@ -127,7 +127,7 @@ public class ShearsAbilityModifier extends SingleUseModifier {
   public Boolean removeBlock(IModifierToolStack tool, int level, ToolHarvestContext context) {
     BlockState state = context.getState();
     if (isShears(tool) && state.getBlock() instanceof TripWireBlock) {
-      context.getWorld().setBlockState(context.getPos(), state.with(BlockStateProperties.DISARMED, Boolean.TRUE), 4);
+      context.getWorld().setBlockState(context.getPos(), state.setValue(BlockStateProperties.DISARMED, Boolean.TRUE), 4);
     }
     return null;
   }

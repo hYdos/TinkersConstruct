@@ -1,7 +1,5 @@
 package slimeknights.tconstruct.tools.modifiers.free;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.modifiers.SingleUseModifier;
 import slimeknights.tconstruct.library.recipe.tinkerstation.ValidatedResult;
@@ -14,6 +12,8 @@ import slimeknights.tconstruct.library.tools.stat.ModifierStatsBuilder;
 import slimeknights.tconstruct.library.tools.stat.ToolStats;
 
 import javax.annotation.Nullable;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public class OverslimeModifier extends SingleUseModifier {
   private static final String KEY_OVERSLIME_AMOUNT = Util.makeTranslationKey("gui", "amount");
@@ -29,8 +29,8 @@ public class OverslimeModifier extends SingleUseModifier {
   }
 
   @Override
-  public ITextComponent getDisplayName(IModifierToolStack tool, int level) {
-    return getDisplayName().deepCopy().appendString(": " + getOverslime(tool) + " / " + getCapacity(tool));
+  public Component getDisplayName(IModifierToolStack tool, int level) {
+    return getDisplayName().copy().append(": " + getOverslime(tool) + " / " + getCapacity(tool));
   }
 
 

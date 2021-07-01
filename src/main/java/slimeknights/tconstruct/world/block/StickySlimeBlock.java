@@ -1,9 +1,8 @@
 package slimeknights.tconstruct.world.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SlimeBlock;
-
 import java.util.function.BiPredicate;
+import net.minecraft.world.level.block.SlimeBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class StickySlimeBlock extends SlimeBlock {
 

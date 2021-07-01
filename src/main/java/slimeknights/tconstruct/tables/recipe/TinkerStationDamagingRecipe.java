@@ -3,14 +3,12 @@ package slimeknights.tconstruct.tables.recipe;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.Level;
 import slimeknights.mantle.recipe.RecipeSerializer;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.mantle.util.JsonHelper;
@@ -39,7 +37,7 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe {
   private final int damageAmount;
 
   @Override
-  public boolean matches(ITinkerStationInventory inv, World world) {
+  public boolean matches(ITinkerStationInventory inv, Level world) {
     if (!TinkerTags.Items.MODIFIABLE.contains(inv.getTinkerableStack().getItem())) {
       return false;
     }
@@ -69,35 +67,35 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe {
   /** @deprecated Use {@link #getValidatedResult(ITinkerStationInventory)} */
   @Deprecated
   @Override
-  public ItemStack getRecipeOutput() {
+  public ItemStack getResultItem() {
     return ItemStack.EMPTY;
   }
 
   @Override
-  public IRecipeSerializer<?> getSerializer() {
+  public net.minecraft.world.item.crafting.RecipeSerializer<?> getSerializer() {
     return TinkerTables.tinkerStationDamagingSerializer.get();
   }
 
   /** Serializer logic */
   public static class Serializer extends RecipeSerializer<TinkerStationDamagingRecipe> {
     @Override
-    public TinkerStationDamagingRecipe read(ResourceLocation id, JsonObject json) {
-      Ingredient ingredient = Ingredient.deserialize(JsonHelper.getElement(json, "ingredient"));
-      int restoreAmount = JSONUtils.getInt(json, "damage_amount");
+    public TinkerStationDamagingRecipe fromJson(ResourceLocation id, JsonObject json) {
+      Ingredient ingredient = Ingredient.fromJson(JsonHelper.getElement(json, "ingredient"));
+      int restoreAmount = GsonHelper.getAsInt(json, "damage_amount");
       return new TinkerStationDamagingRecipe(id, ingredient, restoreAmount);
     }
 
     @Nullable
     @Override
-    public TinkerStationDamagingRecipe read(ResourceLocation id, PacketBuffer buffer) {
-      Ingredient ingredient = Ingredient.read(buffer);
+    public TinkerStationDamagingRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
+      Ingredient ingredient = Ingredient.fromNetwork(buffer);
       int damageAmount = buffer.readVarInt();
       return new TinkerStationDamagingRecipe(id, ingredient, damageAmount);
     }
 
     @Override
-    public void write(PacketBuffer buffer, TinkerStationDamagingRecipe recipe) {
-      recipe.ingredient.write(buffer);
+    public void write(FriendlyByteBuf buffer, TinkerStationDamagingRecipe recipe) {
+      recipe.ingredient.toNetwork(buffer);
       buffer.writeVarInt(recipe.damageAmount);
     }
   }
@@ -109,8 +107,8 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe {
     private final int damageAmount;
 
     @Override
-    public void build(Consumer<IFinishedRecipe> consumer) {
-      ItemStack[] stacks = ingredient.getMatchingStacks();
+    public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer) {
+      ItemStack[] stacks = ingredient.getItems();
       if (stacks.length == 0) {
         throw new IllegalStateException("Empty ingredient not allowed");
       }
@@ -118,7 +116,7 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe {
     }
 
     @Override
-    public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+    public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer, ResourceLocation id) {
       if (ingredient == Ingredient.EMPTY) {
         throw new IllegalStateException("Empty ingredient not allowed");
       }
@@ -132,13 +130,13 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe {
       }
 
       @Override
-      public void serialize(JsonObject json) {
-        json.add("ingredient", ingredient.serialize());
+      public void serializeRecipeData(JsonObject json) {
+        json.add("ingredient", ingredient.toJson());
         json.addProperty("damage_amount", damageAmount);
       }
 
       @Override
-      public IRecipeSerializer<?> getSerializer() {
+      public net.minecraft.world.item.crafting.RecipeSerializer<?> getType() {
         return TinkerTables.tinkerStationDamagingSerializer.get();
       }
     }

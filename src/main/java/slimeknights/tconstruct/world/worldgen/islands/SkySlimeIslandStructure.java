@@ -1,22 +1,22 @@
 package slimeknights.tconstruct.world.worldgen.islands;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.world.biome.MobSpawnInfo;
 import slimeknights.tconstruct.world.TinkerWorld;
 import slimeknights.tconstruct.world.worldgen.islands.variants.IIslandVariant;
 import slimeknights.tconstruct.world.worldgen.islands.variants.IslandVariants;
 
 import java.util.List;
 import java.util.Random;
+import net.minecraft.world.level.biome.MobSpawnSettings;
 
 /**
  * Overworld structure containing sky slimes, spawns in the sky
  */
 public class SkySlimeIslandStructure extends AbstractIslandStructure {
-  private final List<MobSpawnInfo.Spawners> monsters = ImmutableList.of(new MobSpawnInfo.Spawners(TinkerWorld.skySlimeEntity.get(), 30, 4, 4));
+  private final List<MobSpawnSettings.SpawnerData> monsters = ImmutableList.of(new MobSpawnSettings.SpawnerData(TinkerWorld.skySlimeEntity.get(), 30, 4, 4));
 
   @Override
-  public List<MobSpawnInfo.Spawners> getDefaultSpawnList() {
+  public List<MobSpawnSettings.SpawnerData> getDefaultSpawnList() {
     return monsters;
   }
 

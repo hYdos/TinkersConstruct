@@ -2,9 +2,8 @@ package slimeknights.tconstruct.library.recipe.casting.material;
 
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.tconstruct.library.tinkering.IMaterialItem;
 import slimeknights.tconstruct.smeltery.TinkerSmeltery;
@@ -29,12 +28,12 @@ public class CompositeCastingRecipeBuilder extends AbstractRecipeBuilder<Composi
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer) {
     build(consumer, Objects.requireNonNull(result.asItem().getRegistryName()));
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer, ResourceLocation id) {
     ResourceLocation advancementId = this.buildOptionalAdvancement(id, "casting");
     consumer.accept(new FinishedRecipe(id, advancementId));
   }
@@ -45,7 +44,7 @@ public class CompositeCastingRecipeBuilder extends AbstractRecipeBuilder<Composi
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
       if (!group.isEmpty()) {
         json.addProperty("group", group);
       }
@@ -54,7 +53,7 @@ public class CompositeCastingRecipeBuilder extends AbstractRecipeBuilder<Composi
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return serializer;
     }
   }

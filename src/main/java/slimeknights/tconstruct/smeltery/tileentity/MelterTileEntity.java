@@ -2,16 +2,16 @@ package slimeknights.tconstruct.smeltery.tileentity;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -39,7 +39,7 @@ import slimeknights.tconstruct.smeltery.tileentity.module.MeltingModuleInventory
 import javax.annotation.Nullable;
 import java.util.Collections;
 
-public class MelterTileEntity extends NamableTileEntity implements ITankTileEntity, ITickableTileEntity {
+public class MelterTileEntity extends NamableTileEntity implements ITankTileEntity, TickableBlockEntity {
   /** Max capacity for the tank */
   private static final int TANK_CAPACITY = MaterialValues.METAL_BLOCK;
   /* tags */
@@ -81,13 +81,13 @@ public class MelterTileEntity extends NamableTileEntity implements ITankTileEnti
 
   /** Extendable constructor */
   @SuppressWarnings("WeakerAccess")
-  protected MelterTileEntity(TileEntityType<? extends MelterTileEntity> type) {
-    super(type, new TranslationTextComponent(Util.makeTranslationKey("gui", "melter")));
+  protected MelterTileEntity(BlockEntityType<? extends MelterTileEntity> type) {
+    super(type, new TranslatableComponent(Util.makeTranslationKey("gui", "melter")));
   }
 
   @Nullable
   @Override
-  public Container createMenu(int id, PlayerInventory inv, PlayerEntity playerEntity) {
+  public AbstractContainerMenu createMenu(int id, Inventory inv, Player playerEntity) {
     return new MelterContainer(id, inv, this);
   }
 
@@ -120,7 +120,7 @@ public class MelterTileEntity extends NamableTileEntity implements ITankTileEnti
   /** Checks if the tile entity is active */
   private boolean isFormed() {
     BlockState state = this.getBlockState();
-    return state.hasProperty(MelterBlock.IN_STRUCTURE) && state.get(MelterBlock.IN_STRUCTURE);
+    return state.hasProperty(MelterBlock.IN_STRUCTURE) && state.getValue(MelterBlock.IN_STRUCTURE);
   }
 
   @Override
@@ -140,17 +140,17 @@ public class MelterTileEntity extends NamableTileEntity implements ITankTileEnti
           }
         // tick 2: heat items and consume fuel
         case 2: {
-          assert world != null;
+          assert level != null;
           BlockState state = getBlockState();
           boolean hasFuel = fuelModule.hasFuel();
           // update the active state
-          if (state.get(ControllerBlock.ACTIVE) != hasFuel) {
-            world.setBlockState(pos, state.with(ControllerBlock.ACTIVE, hasFuel));
+          if (state.getValue(ControllerBlock.ACTIVE) != hasFuel) {
+            level.setBlockAndUpdate(worldPosition, state.setValue(ControllerBlock.ACTIVE, hasFuel));
             // update the heater below
-            BlockPos down = pos.down();
-            BlockState downState = world.getBlockState(down);
-            if (TinkerTags.Blocks.FUEL_TANKS.contains(downState.getBlock()) && downState.hasProperty(ControllerBlock.ACTIVE) && downState.get(ControllerBlock.ACTIVE) != hasFuel) {
-              world.setBlockState(down, downState.with(ControllerBlock.ACTIVE, hasFuel));
+            BlockPos down = worldPosition.below();
+            BlockState downState = level.getBlockState(down);
+            if (TinkerTags.Blocks.FUEL_TANKS.contains(downState.getBlock()) && downState.hasProperty(ControllerBlock.ACTIVE) && downState.getValue(ControllerBlock.ACTIVE) != hasFuel) {
+              level.setBlockAndUpdate(down, downState.setValue(ControllerBlock.ACTIVE, hasFuel));
             }
           }
           // heat items
@@ -177,8 +177,8 @@ public class MelterTileEntity extends NamableTileEntity implements ITankTileEnti
   }
 
   @Override
-  public void read(BlockState state, CompoundNBT tag) {
-    super.read(state, tag);
+  public void load(BlockState state, CompoundTag tag) {
+    super.load(state, tag);
     tank.readFromNBT(tag.getCompound(NBTTags.TANK));
     fuelModule.readFromNBT(tag);
     if (tag.contains(TAG_INVENTORY, NBT.TAG_COMPOUND)) {
@@ -187,15 +187,15 @@ public class MelterTileEntity extends NamableTileEntity implements ITankTileEnti
   }
 
   @Override
-  public void writeSynced(CompoundNBT tag) {
+  public void writeSynced(CompoundTag tag) {
     super.writeSynced(tag);
-    tag.put(NBTTags.TANK, tank.writeToNBT(new CompoundNBT()));
+    tag.put(NBTTags.TANK, tank.writeToNBT(new CompoundTag()));
     tag.put(TAG_INVENTORY, meltingInventory.writeToNBT());
   }
 
   @Override
-  public CompoundNBT write(CompoundNBT tag) {
-    tag = super.write(tag);
+  public CompoundTag save(CompoundTag tag) {
+    tag = super.save(tag);
     fuelModule.writeToNBT(tag);
     return tag;
   }
@@ -205,6 +205,6 @@ public class MelterTileEntity extends NamableTileEntity implements ITankTileEnti
    */
   /** Checks if we are on a server world */
   private boolean isServerWorld() {
-    return this.getWorld() != null && !this.getWorld().isRemote;
+    return this.getLevel() != null && !this.getLevel().isClientSide;
   }
 }

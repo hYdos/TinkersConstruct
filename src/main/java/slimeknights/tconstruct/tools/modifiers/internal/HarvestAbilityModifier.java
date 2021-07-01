@@ -1,23 +1,23 @@
 package slimeknights.tconstruct.tools.modifiers.internal;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CropsBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameters;
-import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.Property;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.eventbus.api.Event.Result;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
@@ -61,13 +61,13 @@ public class HarvestAbilityModifier extends SingleUseModifier {
    * @return  True if harvested
    */
 
-  private static boolean harvestInteract(ItemUseContext context, ServerWorld world, BlockState state, BlockPos pos, @Nullable PlayerEntity player) {
+  private static boolean harvestInteract(UseOnContext context, ServerLevel world, BlockState state, BlockPos pos, @Nullable Player player) {
     if (player == null) {
       return false;
     }
-    BlockRayTraceResult trace = new BlockRayTraceResult(context.getHitVec(), context.getFace(), pos, false);
-    ActionResultType result = state.onBlockActivated(world, player, context.getHand(), trace);
-    return result.isSuccessOrConsume();
+    BlockHitResult trace = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), pos, false);
+    InteractionResult result = state.use(world, player, context.getHand(), trace);
+    return result.consumesAction();
   }
 
   /**
@@ -78,14 +78,14 @@ public class HarvestAbilityModifier extends SingleUseModifier {
    * @param player  Player instance
    * @return True if the block was harvested
    */
-  private static boolean harvestStackable(ServerWorld world, BlockState state, BlockPos pos, @Nullable PlayerEntity player) {
+  private static boolean harvestStackable(ServerLevel world, BlockState state, BlockPos pos, @Nullable Player player) {
     // if the block below is the same, break this block
-    if (world.getBlockState(pos.down()).getBlock() == state.getBlock()) {
+    if (world.getBlockState(pos.below()).getBlock() == state.getBlock()) {
       world.destroyBlock(pos, true, player);
       return true;
     } else {
       // if the block above is the same, break it
-      BlockPos up = pos.up();
+      BlockPos up = pos.above();
       if (world.getBlockState(up).getBlock() == state.getBlock()) {
         world.destroyBlock(up, true, player);
         return true;
@@ -103,16 +103,16 @@ public class HarvestAbilityModifier extends SingleUseModifier {
    * @param player  Player instance
    * @return  True if the crop was successfully harvested
    */
-  private static boolean harvestCrop(ItemStack stack, ServerWorld world, BlockState state, BlockPos pos, @Nullable PlayerEntity player) {
+  private static boolean harvestCrop(ItemStack stack, ServerLevel world, BlockState state, BlockPos pos, @Nullable Player player) {
     Block block = state.getBlock();
     BlockState replant;
     // if crops block, its easy
-    if (block instanceof CropsBlock) {
-      CropsBlock crops = (CropsBlock)block;
+    if (block instanceof CropBlock) {
+      CropBlock crops = (CropBlock)block;
       if (!crops.isMaxAge(state)) {
         return false;
       }
-      replant = crops.withAge(0);
+      replant = crops.getStateForAge(0);
     } else {
       // try to find an age property
       IntegerProperty age = null;
@@ -127,25 +127,25 @@ public class HarvestAbilityModifier extends SingleUseModifier {
         return false;
       } else {
         // property must have 0 as valid
-        Collection<Integer> allowedValues = age.getAllowedValues();
+        Collection<Integer> allowedValues = age.getPossibleValues();
         if (!allowedValues.contains(0)) {
           return false;
         }
         // crop must be max age
-        int maxAge = age.getAllowedValues().stream().max(Integer::compareTo).orElse(Integer.MAX_VALUE);
-        if (state.get(age) < maxAge) {
+        int maxAge = age.getPossibleValues().stream().max(Integer::compareTo).orElse(Integer.MAX_VALUE);
+        if (state.getValue(age) < maxAge) {
           return false;
         }
-        replant = state.with(age, 0);
+        replant = state.setValue(age, 0);
       }
     }
 
     // crop is fully grown, get loot context
     LootContext.Builder lootContext = new LootContext.Builder(world)
-      .withRandom(world.rand)
-      .withParameter(LootParameters.field_237457_g_, Vector3d.copyCentered(pos))
-      .withParameter(LootParameters.TOOL, ItemStack.EMPTY)
-      .withNullableParameter(LootParameters.BLOCK_ENTITY, world.getTileEntity(pos));
+      .withRandom(world.random)
+      .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+      .withParameter(LootContextParams.TOOL, ItemStack.EMPTY)
+      .withOptionalParameter(LootContextParams.BLOCK_ENTITY, world.getBlockEntity(pos));
     // find drops
     List<ItemStack> drops = state.getDrops(lootContext);
 
@@ -166,17 +166,17 @@ public class HarvestAbilityModifier extends SingleUseModifier {
 
     // if we found one, replant, no seed means break
     if (hasSeed) {
-      world.setBlockState(pos, replant);
-      state.spawnAdditionalDrops(world, pos, stack);
+      world.setBlockAndUpdate(pos, replant);
+      state.spawnAfterBreak(world, pos, stack);
       // set block state will not play sounds, destory block will
-      world.playSound(null, pos, state.getSoundType(world, pos, player).getBreakSound(), SoundCategory.BLOCKS, 1.0f, 1.0f);
+      world.playSound(null, pos, state.getSoundType(world, pos, player).getBreakSound(), SoundSource.BLOCKS, 1.0f, 1.0f);
     } else {
       world.destroyBlock(pos, false);
     }
 
     // drop items
     for (ItemStack drop : drops) {
-      Block.spawnAsEntity(world, pos, drop);
+      Block.popResource(world, pos, drop);
     }
 
     return true;
@@ -191,7 +191,7 @@ public class HarvestAbilityModifier extends SingleUseModifier {
    * @param stack    Stack used to break
    * @return  True if harvested
    */
-  private static boolean harvest(ItemUseContext context, ItemStack stack, IModifierToolStack tool, ServerWorld world, BlockState state, BlockPos pos, @Nullable PlayerEntity player) {
+  private static boolean harvest(UseOnContext context, ItemStack stack, IModifierToolStack tool, ServerLevel world, BlockState state, BlockPos pos, @Nullable Player player) {
     // first, check main harvestable tag
     Block block = state.getBlock();
     if (!TinkerTags.Blocks.HARVESTABLE.contains(block)) {
@@ -230,28 +230,28 @@ public class HarvestAbilityModifier extends SingleUseModifier {
   }
 
   @Override
-  public ActionResultType beforeBlockUse(IModifierToolStack tool, int level, ItemUseContext context) {
+  public InteractionResult beforeBlockUse(IModifierToolStack tool, int level, UseOnContext context) {
     if (tool.isBroken()) {
-      return ActionResultType.PASS;
+      return InteractionResult.PASS;
     }
 
-    ItemStack stack = context.getItem();
+    ItemStack stack = context.getItemInHand();
     Item item = stack.getItem();
     if (item instanceof IModifiableHarvest) {
       IModifiableHarvest toolCore = (IModifiableHarvest) item;
-      PlayerEntity player = context.getPlayer();
-      if (player != null && player.isSneaking()) {
-        return ActionResultType.PASS;
+      Player player = context.getPlayer();
+      if (player != null && player.isShiftKeyDown()) {
+        return InteractionResult.PASS;
       }
   
       // try harvest first
-      World world = context.getWorld();
-      BlockPos pos = context.getPos();
+      Level world = context.getLevel();
+      BlockPos pos = context.getClickedPos();
       BlockState state = world.getBlockState(pos);
       if (TinkerTags.Blocks.HARVESTABLE.contains(state.getBlock())) {
-        if (world instanceof ServerWorld) {
+        if (world instanceof ServerLevel) {
           boolean survival = player == null || !player.isCreative();
-          ServerWorld server = (ServerWorld)world;
+          ServerLevel server = (ServerLevel)world;
   
           // try harvesting the crop, if successful and survival, damage the tool
           boolean didHarvest = false;
@@ -263,7 +263,7 @@ public class HarvestAbilityModifier extends SingleUseModifier {
   
           // if we have a player, try doing AOE harvest
           if (!broken && player != null) {
-            for (BlockPos newPos : toolCore.getToolHarvestLogic().getAOEBlocks(tool, stack, player, state, world, pos, context.getFace(), AOEMatchType.TRANSFORM)) {
+            for (BlockPos newPos : toolCore.getToolHarvestLogic().getAOEBlocks(tool, stack, player, state, world, pos, context.getClickedFace(), AOEMatchType.TRANSFORM)) {
               // try harvesting the crop, if successful and survival, damage the tool
               if (harvest(context, stack, tool, server, world.getBlockState(newPos), newPos, player)) {
                 didHarvest = true;
@@ -277,17 +277,17 @@ public class HarvestAbilityModifier extends SingleUseModifier {
           // animations
           if (player != null) {
             if (didHarvest) {
-              player.spawnSweepParticles();
+              player.sweepAttack();
             }
             if (broken) {
-              player.sendBreakAnimation(context.getHand());
+              player.broadcastBreakEvent(context.getHand());
             }
           }
         }
-        return ActionResultType.SUCCESS;
+        return InteractionResult.SUCCESS;
       }
     }
-    return ActionResultType.PASS;
+    return InteractionResult.PASS;
   }
 
   public interface IHarvestModifier {
@@ -300,6 +300,6 @@ public class HarvestAbilityModifier extends SingleUseModifier {
      * @param state    State before it was harvested
      * @param pos      Position that was harvested, may be different from the context
      */
-    void afterHarvest(IModifierToolStack tool, int level, ItemUseContext context, ServerWorld world, BlockState state, BlockPos pos);
+    void afterHarvest(IModifierToolStack tool, int level, UseOnContext context, ServerLevel world, BlockState state, BlockPos pos);
   }
 }

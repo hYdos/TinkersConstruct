@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.library.tools.item;
 
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ForgeI18n;
@@ -30,7 +30,7 @@ import java.util.Optional;
  * Extension of {@link MaterialItem} which adds stats to the tooltip and has a set stat type
  */
 public class ToolPartItem extends MaterialItem implements IToolPart {
-  private static final ITextComponent MISSING_INFO = Util.makeTranslation("item", "part.missing_info");
+  private static final Component MISSING_INFO = Util.makeTranslation("item", "part.missing_info");
   private static final String MISSING_MATERIAL_KEY = Util.makeTranslationKey("item", "part.missing_material");
   private static final String MISSING_STATS_KEY = Util.makeTranslationKey("item", "part.missing_stats");
 
@@ -54,7 +54,7 @@ public class ToolPartItem extends MaterialItem implements IToolPart {
 
   @Override
   @OnlyIn(Dist.CLIENT)
-  public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
     IMaterial material = this.getMaterial(stack);
     // add all traits to the info
     if (!this.checkMissingMaterialTooltip(stack, material, tooltip)) {
@@ -67,7 +67,7 @@ public class ToolPartItem extends MaterialItem implements IToolPart {
           this.addStatInfoTooltip(material, tooltip);
         } else {
           // info tooltip for detailed and component info
-          tooltip.add(StringTextComponent.EMPTY);
+          tooltip.add(TextComponent.EMPTY);
           tooltip.add(ToolCore.TOOLTIP_HOLD_SHIFT);
         }
       }
@@ -81,12 +81,12 @@ public class ToolPartItem extends MaterialItem implements IToolPart {
    * @param tooltip   Tooltip list
    * @param material  Material to add
    */
-  protected void addStatInfoTooltip(IMaterial material, List<ITextComponent> tooltip) {
+  protected void addStatInfoTooltip(IMaterial material, List<Component> tooltip) {
     MaterialRegistry.getInstance().getMaterialStats(material.getIdentifier(), this.materialStatId).ifPresent((stat) -> {
-      List<ITextComponent> text = stat.getLocalizedInfo();
+      List<Component> text = stat.getLocalizedInfo();
       if (!text.isEmpty()) {
-        tooltip.add(new StringTextComponent(""));
-        tooltip.add(stat.getLocalizedName().mergeStyle(TextFormatting.WHITE, TextFormatting.UNDERLINE));
+        tooltip.add(new TextComponent(""));
+        tooltip.add(stat.getLocalizedName().withStyle(ChatFormatting.WHITE, ChatFormatting.UNDERLINE));
         tooltip.addAll(stat.getLocalizedInfo());
       }
     });
@@ -99,10 +99,10 @@ public class ToolPartItem extends MaterialItem implements IToolPart {
    * @param tooltip   Tooltip list
    * @return  True if the material is unknown
    */
-  protected boolean checkMissingMaterialTooltip(ItemStack stack, IMaterial material, List<ITextComponent> tooltip) {
+  protected boolean checkMissingMaterialTooltip(ItemStack stack, IMaterial material, List<Component> tooltip) {
     if (material == IMaterial.UNKNOWN) {
       Optional<MaterialId> materialId = getMaterialId(stack);
-      materialId.ifPresent(id -> tooltip.add(new TranslationTextComponent(MISSING_MATERIAL_KEY, id)));
+      materialId.ifPresent(id -> tooltip.add(new TranslatableComponent(MISSING_MATERIAL_KEY, id)));
       return true;
     }
     else if (!canUseMaterial(material)) {

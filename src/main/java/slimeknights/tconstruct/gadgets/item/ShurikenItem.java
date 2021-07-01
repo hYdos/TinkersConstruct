@@ -1,15 +1,15 @@
 package slimeknights.tconstruct.gadgets.item;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SnowballItem;
+import net.minecraft.network.chat.Component;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SnowballItem;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import slimeknights.mantle.util.TranslationHelper;
@@ -21,37 +21,37 @@ import java.util.function.BiFunction;
 
 public class ShurikenItem extends SnowballItem {
 
-  private final BiFunction<World, PlayerEntity, ShurikenEntityBase> entity;
+  private final BiFunction<Level, Player, ShurikenEntityBase> entity;
 
-  public ShurikenItem(Properties properties, BiFunction<World, PlayerEntity, ShurikenEntityBase> entity) {
+  public ShurikenItem(Properties properties, BiFunction<Level, Player, ShurikenEntityBase> entity) {
     super(properties);
     this.entity = entity;
   }
 
   @Override
-  public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-    ItemStack itemStack = playerIn.getHeldItem(handIn);
-    if (!playerIn.abilities.isCreativeMode) {
+  public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
+    ItemStack itemStack = playerIn.getItemInHand(handIn);
+    if (!playerIn.abilities.instabuild) {
       itemStack.shrink(1);
     }
 
-    playerIn.getCooldownTracker().setCooldown(itemStack.getItem(), 4);
+    playerIn.getCooldowns().addCooldown(itemStack.getItem(), 4);
 
-    if(!worldIn.isRemote) {
+    if(!worldIn.isClientSide) {
       ShurikenEntityBase entity = this.entity.apply(worldIn, playerIn);
       entity.setItem(itemStack);
-      entity.func_234612_a_(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
-      worldIn.addEntity(entity);
+      entity.shootFromRotation(playerIn, playerIn.xRot, playerIn.yRot, 0.0F, 1.5F, 1.0F);
+      worldIn.addFreshEntity(entity);
     }
 
-    playerIn.addStat(Stats.ITEM_USED.get(this));
-    return new ActionResult<>(ActionResultType.SUCCESS, itemStack);
+    playerIn.awardStat(Stats.ITEM_USED.get(this));
+    return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
   }
 
   @Override
   @OnlyIn(Dist.CLIENT)
-  public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
     TranslationHelper.addOptionalTooltip(stack, tooltip);
-    super.addInformation(stack, worldIn, tooltip, flagIn);
+    super.appendHoverText(stack, worldIn, tooltip, flagIn);
   }
 }

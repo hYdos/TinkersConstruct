@@ -1,7 +1,6 @@
 package slimeknights.tconstruct.plugin.jei.partbuilder;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.item.ItemStack;
 import slimeknights.tconstruct.library.materials.MaterialId;
 import slimeknights.tconstruct.library.recipe.material.MaterialRecipe;
 
@@ -9,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Allows getting a list of items for display for a given material

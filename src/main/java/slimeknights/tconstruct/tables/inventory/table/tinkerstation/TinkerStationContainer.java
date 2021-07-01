@@ -1,11 +1,11 @@
 package slimeknights.tconstruct.tables.inventory.table.tinkerstation;
 
 import lombok.Getter;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import slimeknights.tconstruct.library.tools.ToolDefinition;
 import slimeknights.tconstruct.tables.TinkerTables;
 import slimeknights.tconstruct.tables.inventory.BaseStationContainer;
@@ -28,7 +28,7 @@ public class TinkerStationContainer extends BaseStationContainer<TinkerStationTi
    * @param inv   Player inventory
    * @param tile  Relevant tile entity
    */
-  public TinkerStationContainer(int id, PlayerInventory inv, @Nullable TinkerStationTileEntity tile) {
+  public TinkerStationContainer(int id, Inventory inv, @Nullable TinkerStationTileEntity tile) {
     super(TinkerTables.tinkerStationContainer.get(), id, inv, tile);
 
     // unfortunately, nothing works with no tile
@@ -41,7 +41,7 @@ public class TinkerStationContainer extends BaseStationContainer<TinkerStationTi
       inputSlots.add(this.addSlot(new TinkerableSlot(tile, TinkerStationTileEntity.TINKER_SLOT, 0, 0)));
 
       int index;
-      for (index = 0; index < tile.getSizeInventory() - 1; index++) {
+      for (index = 0; index < tile.getContainerSize() - 1; index++) {
         inputSlots.add(this.addSlot(new TinkerStationInputSlot(tile, index + TinkerStationTileEntity.INPUT_SLOT, 0, 0)));
       }
 
@@ -63,7 +63,7 @@ public class TinkerStationContainer extends BaseStationContainer<TinkerStationTi
    * @param inv  Player inventory
    * @param buf  Buffer for fetching tile
    */
-  public TinkerStationContainer(int id, PlayerInventory inv, PacketBuffer buf) {
+  public TinkerStationContainer(int id, Inventory inv, FriendlyByteBuf buf) {
     this(id, inv, getTileEntityFromBuf(buf, TinkerStationTileEntity.class));
   }
 
@@ -73,8 +73,8 @@ public class TinkerStationContainer extends BaseStationContainer<TinkerStationTi
   }
 
   @Override
-  public boolean canMergeSlot(ItemStack stack, Slot slot) {
-    return slot != this.resultSlot && super.canMergeSlot(stack, slot);
+  public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
+    return slot != this.resultSlot && super.canTakeItemForPickAll(stack, slot);
   }
 
   /**
@@ -86,12 +86,12 @@ public class TinkerStationContainer extends BaseStationContainer<TinkerStationTi
   public void setToolSelection(int activeSlots, boolean mainSlotHidden, @Nullable ToolDefinition filter) {
     assert this.tile != null;
 
-    if (activeSlots > this.tile.getSizeInventory()) {
-      activeSlots = this.tile.getSizeInventory();
+    if (activeSlots > this.tile.getContainerSize()) {
+      activeSlots = this.tile.getContainerSize();
     }
 
-    for (int i = 0; i < this.tile.getSizeInventory(); i++) {
-      Slot slot = this.inventorySlots.get(i);
+    for (int i = 0; i < this.tile.getContainerSize(); i++) {
+      Slot slot = this.slots.get(i);
 
       if (slot instanceof TinkerStationSlot) {
         // activate or deactivate the slots
@@ -118,6 +118,6 @@ public class TinkerStationContainer extends BaseStationContainer<TinkerStationTi
   }
 
   public ItemStack getResult() {
-    return this.resultSlot.getStack();
+    return this.resultSlot.getItem();
   }
 }

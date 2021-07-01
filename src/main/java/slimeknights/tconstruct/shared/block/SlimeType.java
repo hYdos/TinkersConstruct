@@ -3,15 +3,15 @@ package slimeknights.tconstruct.shared.block;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.item.Item;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.IStringSerializable;
+import net.minecraft.tags.Tag;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.Item;
 import slimeknights.tconstruct.common.TinkerTags;
 
 import java.util.Locale;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public enum SlimeType implements IStringSerializable {
+public enum SlimeType implements StringRepresentable {
   EARTH(0x01cd4e, 0x8CD782, TinkerTags.Items.EARTH_SLIMEBALL),
   SKY(0x01cbcd, 0x00F4DA, TinkerTags.Items.SKY_SLIMEBALL),
   ICHOR(0xff970d, 0xd09800, TinkerTags.Items.ICHOR_SLIMEBALL),
@@ -37,10 +37,10 @@ public enum SlimeType implements IStringSerializable {
   @Getter
   private final int defaultFoliageColor;
   @Getter
-  private final ITag<Item> slimeBallTag;
+  private final Tag<Item> slimeBallTag;
 
   @Override
-  public String getString() {
+  public String getSerializedName() {
     return this.name().toLowerCase(Locale.US);
   }
 }

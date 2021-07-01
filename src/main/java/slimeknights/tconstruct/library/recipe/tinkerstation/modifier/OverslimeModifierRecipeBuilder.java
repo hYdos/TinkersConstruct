@@ -2,12 +2,11 @@ package slimeknights.tconstruct.library.recipe.tinkerstation.modifier;
 
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.ItemLike;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.tconstruct.tools.TinkerModifiers;
 
@@ -24,13 +23,13 @@ public class OverslimeModifierRecipeBuilder extends AbstractRecipeBuilder<Oversl
   private final int restoreAmount;
 
   /** Creates a new builder for the given item */
-  public static OverslimeModifierRecipeBuilder modifier(IItemProvider item, int restoreAmount) {
-    return modifier(Ingredient.fromItems(item), restoreAmount);
+  public static OverslimeModifierRecipeBuilder modifier(ItemLike item, int restoreAmount) {
+    return modifier(Ingredient.of(item), restoreAmount);
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer) {
-    ItemStack[] stacks = ingredient.getMatchingStacks();
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer) {
+    ItemStack[] stacks = ingredient.getItems();
     if (stacks.length == 0) {
       throw new IllegalStateException("Empty ingredient not allowed");
     }
@@ -38,7 +37,7 @@ public class OverslimeModifierRecipeBuilder extends AbstractRecipeBuilder<Oversl
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<net.minecraft.data.recipes.FinishedRecipe> consumer, ResourceLocation id) {
     if (ingredient == Ingredient.EMPTY) {
       throw new IllegalStateException("Empty ingredient not allowed");
     }
@@ -52,13 +51,13 @@ public class OverslimeModifierRecipeBuilder extends AbstractRecipeBuilder<Oversl
     }
 
     @Override
-    public void serialize(JsonObject json) {
-      json.add("ingredient", ingredient.serialize());
+    public void serializeRecipeData(JsonObject json) {
+      json.add("ingredient", ingredient.toJson());
       json.addProperty("restore_amount", restoreAmount);
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return TinkerModifiers.overslimeSerializer.get();
     }
   }

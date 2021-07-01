@@ -94,7 +94,7 @@ configurations {
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     forge "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    mappings "de.oceanlabs.mcp:mcp_snapshot:${mappings_version}"
+    mappings "net.mojang.minecraft:mappings:${minecraft_version}"
 
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'

@@ -1,28 +1,28 @@
 package slimeknights.tconstruct.tools;
 
-import net.minecraft.block.BeehiveBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CampfireBlock;
-import net.minecraft.block.CarvedPumpkinBlock;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.tileentity.BeehiveTileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BeehiveBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.CarvedPumpkinBlock;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract;
@@ -50,7 +50,7 @@ public class ToolEvents {
   @SubscribeEvent
   static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
     // Note the way the subscribers are set up, technically works on anything that has the tic_modifiers tag
-    ItemStack stack = event.getPlayer().getHeldItemMainhand();
+    ItemStack stack = event.getPlayer().getMainHandItem();
     if (!TinkerTags.Items.HARVEST.contains(stack.getItem())) {
       return;
     }
@@ -59,9 +59,9 @@ public class ToolEvents {
       List<ModifierEntry> modifiers = tool.getModifierList();
       if (!modifiers.isEmpty()) {
         // modifiers using additive boosts may want info on the original boosts provided
-        PlayerEntity player = event.getPlayer();
+        Player player = event.getPlayer();
         float miningSpeedModifier = Modifier.getMiningModifier(player);
-        boolean isEffective = stack.canHarvestBlock(event.getState());
+        boolean isEffective = stack.isCorrectToolForDrops(event.getState());
         Direction direction = BlockSideHitListener.getSideHit(player);
         for (ModifierEntry entry : tool.getModifierList()) {
           entry.getModifier().onBreakSpeed(tool, entry.getLevel(), event, direction, isEffective, miningSpeedModifier);
@@ -82,13 +82,13 @@ public class ToolEvents {
       return;
     }
     ToolStack tool = ToolStack.from(stack);
-    PlayerEntity player = event.getPlayer();
-    Hand hand = event.getHand();
+    Player player = event.getPlayer();
+    InteractionHand hand = event.getHand();
     Entity target = event.getTarget();
     for (ModifierEntry entry : tool.getModifierList()) {
       // exit on first successful result
-      ActionResultType result = entry.getModifier().onEntityUseFirst(tool, entry.getLevel(), player, target, hand);
-      if (result.isSuccessOrConsume()) {
+      InteractionResult result = entry.getModifier().onEntityUseFirst(tool, entry.getLevel(), player, target, hand);
+      if (result.consumesAction()) {
         event.setCanceled(true);
         event.setCancellationResult(result);
         return;
@@ -104,7 +104,7 @@ public class ToolEvents {
     }
     BlockState state = event.getState();
     Block block = state.getBlock();
-    World world = event.getWorld();
+    Level world = event.getWorld();
     BlockPos pos = event.getPos();
 
     // carve pumpkins
@@ -114,40 +114,40 @@ public class ToolEvents {
         facing = event.getContext().getPlacementHorizontalFacing().getOpposite();
       }
       // carve block
-      world.playSound(null, pos, SoundEvents.BLOCK_PUMPKIN_CARVE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-      world.setBlockState(pos, Blocks.CARVED_PUMPKIN.getDefaultState().with(CarvedPumpkinBlock.FACING, facing), 11);
+      world.playSound(null, pos, SoundEvents.PUMPKIN_CARVE, SoundSource.BLOCKS, 1.0F, 1.0F);
+      world.setBlock(pos, Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING, facing), 11);
       // spawn seeds
       ItemEntity itemEntity = new ItemEntity(
         world,
-        pos.getX() + 0.5D + facing.getXOffset() * 0.65D,
+        pos.getX() + 0.5D + facing.getStepX() * 0.65D,
         pos.getY() + 0.1D,
-        pos.getZ() + 0.5D + facing.getZOffset() * 0.65D,
+        pos.getZ() + 0.5D + facing.getStepZ() * 0.65D,
         new ItemStack(Items.PUMPKIN_SEEDS, 4));
-      itemEntity.setMotion(
-        0.05D * facing.getXOffset() + world.rand.nextDouble() * 0.02D,
+      itemEntity.setDeltaMovement(
+        0.05D * facing.getStepX() + world.random.nextDouble() * 0.02D,
         0.05D,
-        0.05D * facing.getZOffset() + world.rand.nextDouble() * 0.02D);
-      world.addEntity(itemEntity);
+        0.05D * facing.getStepZ() + world.random.nextDouble() * 0.02D);
+      world.addFreshEntity(itemEntity);
       event.setResult(Result.ALLOW);
     }
 
     // hives: get the honey
     if (block instanceof BeehiveBlock) {
       BeehiveBlock beehive = (BeehiveBlock) block;
-      int level = state.get(BeehiveBlock.HONEY_LEVEL);
+      int level = state.getValue(BeehiveBlock.HONEY_LEVEL);
       if (level >= 5) {
         // first, spawn the honey
-        world.playSound(null, pos, SoundEvents.BLOCK_BEEHIVE_SHEAR, SoundCategory.NEUTRAL, 1.0F, 1.0F);
-        Block.spawnAsEntity(world, pos, new ItemStack(Items.HONEYCOMB, 3));
+        world.playSound(null, pos, SoundEvents.BEEHIVE_SHEAR, SoundSource.NEUTRAL, 1.0F, 1.0F);
+        Block.popResource(world, pos, new ItemStack(Items.HONEYCOMB, 3));
 
         // if not smoking, make the bees angry
-        if (!CampfireBlock.isSmokingBlockAt(world, pos)) {
-          if (beehive.hasBees(world, pos)) {
+        if (!CampfireBlock.isSmokeyPos(world, pos)) {
+          if (beehive.hiveContainsBees(world, pos)) {
             beehive.angerNearbyBees(world, pos);
           }
-          beehive.takeHoney(world, state, pos, event.getPlayer(), BeehiveTileEntity.State.EMERGENCY);
+          beehive.releaseBeesAndResetHoneyLevel(world, state, pos, event.getPlayer(), BeehiveBlockEntity.BeeReleaseStatus.EMERGENCY);
         } else {
-          beehive.takeHoney(world, state, pos);
+          beehive.resetHoneyLevel(world, state, pos);
         }
         event.setResult(Result.ALLOW);
       } else {
@@ -157,10 +157,10 @@ public class ToolEvents {
   }
 
   /** Shears the dragon */
-  public static void shearDragon(World world, PlayerEntity player, Entity target, int fortune) {
-    world.playMovingSound(null, target, SoundEvents.ENTITY_SHEEP_SHEAR, SoundCategory.PLAYERS, 1.0F, 1.0F);
-    if (!world.isRemote) {
-      if (target.attackEntityFrom(DamageSource.causePlayerDamage(player), 1.0f) && world.rand.nextFloat() < (0.2 + fortune * 0.1)) {
+  public static void shearDragon(Level world, Player player, Entity target, int fortune) {
+    world.playSound(null, target, SoundEvents.SHEEP_SHEAR, SoundSource.PLAYERS, 1.0F, 1.0F);
+    if (!world.isClientSide) {
+      if (target.hurt(DamageSource.playerAttack(player), 1.0f) && world.random.nextFloat() < (0.2 + fortune * 0.1)) {
         ToolShearEvent.dropItem(target, new ItemStack(TinkerModifiers.dragonScale));
       }
     }
@@ -184,12 +184,12 @@ public class ToolEvents {
       ItemStack held = event.getItemStack();
       // tinker tools are handled in our own modifier logic, this is for vanilla shears
       if (Tags.Items.SHEARS.contains(held.getItem()) && !TinkerTags.Items.MODIFIABLE.contains(held.getItem())) {
-        int fortune = EnchantmentHelper.getEnchantmentLevel(Enchantments.FORTUNE, held);
-        PlayerEntity player = event.getPlayer();
+        int fortune = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE, held);
+        Player player = event.getPlayer();
         shearDragon(event.getWorld(), event.getPlayer(), target, fortune);
-        held.damageItem(1, player, p -> p.sendBreakAnimation(event.getHand()));
+        held.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(event.getHand()));
         event.setCanceled(true);
-        event.setCancellationResult(ActionResultType.SUCCESS);
+        event.setCancellationResult(InteractionResult.SUCCESS);
       }
     }
   }

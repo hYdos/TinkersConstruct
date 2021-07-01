@@ -1,11 +1,11 @@
 package slimeknights.tconstruct.gadgets;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -19,8 +19,8 @@ public class GadgetEvents {
 
   @SubscribeEvent
   public void attachCapability(AttachCapabilitiesEvent<Entity> event) {
-    if (event.getObject() instanceof PlayerEntity) {
-      event.addCapability(Util.getResource("piggyback"), new TinkerPiggybackSerializer((PlayerEntity) event.getObject()));
+    if (event.getObject() instanceof Player) {
+      event.addCapability(Util.getResource("piggyback"), new TinkerPiggybackSerializer((Player) event.getObject()));
     }
   }
 
@@ -32,8 +32,8 @@ public class GadgetEvents {
     }
 
     // do not care about client handles of this event except for players
-    boolean isPlayer = entity instanceof PlayerEntity;
-    boolean isClient = entity.getEntityWorld().isRemote;
+    boolean isPlayer = entity instanceof Player;
+    boolean isClient = entity.getCommandSenderWorld().isClientSide;
     if (isClient && !isPlayer) {
       return;
     }
@@ -41,7 +41,7 @@ public class GadgetEvents {
     // some entities are natively bouncy
     if (isPlayer || !TinkerTags.EntityTypes.BOUNCY.contains(entity.getType())) {
       // otherwise, is the thing is wearing slime boots?
-      ItemStack feet = entity.getItemStackFromSlot(EquipmentSlotType.FEET);
+      ItemStack feet = entity.getItemBySlot(EquipmentSlot.FEET);
       if (!(feet.getItem() instanceof SlimeBootsItem)) {
         return;
       }
@@ -60,13 +60,13 @@ public class GadgetEvents {
         if (!isPlayer || isClient) {
           double f = 0.91d + 0.04d;
           // only slow down half as much when bouncing
-          entity.setMotion(entity.getMotion().x / f, entity.getMotion().y * -0.9, entity.getMotion().z / f);
-          entity.isAirBorne = true;
+          entity.setDeltaMovement(entity.getDeltaMovement().x / f, entity.getDeltaMovement().y * -0.9, entity.getDeltaMovement().z / f);
+          entity.hasImpulse = true;
           entity.setOnGround(false);
         }
         event.setCanceled(true); // we don't care about previous cancels, since we just bounceeeee
-        entity.playSound(SoundEvents.ENTITY_SLIME_SQUISH, 1f, 1f);
-        SlimeBounceHandler.addBounceHandler(entity, entity.getMotion().y);
+        entity.playSound(SoundEvents.SLIME_SQUISH, 1f, 1f);
+        SlimeBounceHandler.addBounceHandler(entity, entity.getDeltaMovement().y);
       }
     }
   }

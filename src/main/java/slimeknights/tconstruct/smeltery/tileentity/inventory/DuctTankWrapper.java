@@ -1,8 +1,8 @@
 package slimeknights.tconstruct.smeltery.tileentity.inventory;
 
 import lombok.AllArgsConstructor;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 

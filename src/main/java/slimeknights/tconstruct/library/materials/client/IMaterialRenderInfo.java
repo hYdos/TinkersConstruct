@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.library.materials.client;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Determines the type of texture used for rendering a specific material

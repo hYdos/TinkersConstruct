@@ -1,20 +1,20 @@
 package slimeknights.tconstruct.library.capability.piggyback;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.play.server.SSetPassengersPacket;
 import slimeknights.tconstruct.library.network.TinkerNetwork;
 
 import java.util.List;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 public class TinkerPiggybackHandler implements ITinkerPiggyback {
 
-  private PlayerEntity riddenPlayer;
+  private Player riddenPlayer;
   private List<Entity> lastPassengers;
 
   @Override
-  public void setRiddenPlayer(PlayerEntity player) {
+  public void setRiddenPlayer(Player player) {
     this.riddenPlayer = player;
   }
 
@@ -23,8 +23,8 @@ public class TinkerPiggybackHandler implements ITinkerPiggyback {
     if (this.riddenPlayer != null) {
       // tell the player itself if his riders changed serverside
       if (!this.riddenPlayer.getPassengers().equals(this.lastPassengers)) {
-        if (this.riddenPlayer instanceof ServerPlayerEntity) {
-          TinkerNetwork.getInstance().sendVanillaPacket(this.riddenPlayer, new SSetPassengersPacket(this.riddenPlayer));
+        if (this.riddenPlayer instanceof ServerPlayer) {
+          TinkerNetwork.getInstance().sendVanillaPacket(this.riddenPlayer, new ClientboundSetPassengersPacket(this.riddenPlayer));
         }
       }
       this.lastPassengers = this.riddenPlayer.getPassengers();

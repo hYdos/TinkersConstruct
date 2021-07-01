@@ -4,14 +4,14 @@ import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.FluidIngredient;
 import slimeknights.mantle.recipe.ItemOutput;
@@ -51,7 +51,7 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param resultIn  Recipe result
    * @return  Builder instance
    */
-  public static ItemCastingRecipeBuilder basinRecipe(IItemProvider resultIn) {
+  public static ItemCastingRecipeBuilder basinRecipe(ItemLike resultIn) {
     return basinRecipe(ItemOutput.fromItem(resultIn));
   }
 
@@ -60,7 +60,7 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param result  Recipe result
    * @return  Builder instance
    */
-  public static ItemCastingRecipeBuilder basinRecipe(ITag<Item> result) {
+  public static ItemCastingRecipeBuilder basinRecipe(Tag<Item> result) {
     return basinRecipe(ItemOutput.fromTag(result, 1));
   }
 
@@ -78,7 +78,7 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param resultIn  Recipe result
    * @return  Builder instance
    */
-  public static ItemCastingRecipeBuilder tableRecipe(IItemProvider resultIn) {
+  public static ItemCastingRecipeBuilder tableRecipe(ItemLike resultIn) {
     return tableRecipe(ItemOutput.fromItem(resultIn));
   }
 
@@ -87,7 +87,7 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param result  Recipe result
    * @return  Builder instance
    */
-  public static ItemCastingRecipeBuilder tableRecipe(ITag<Item> result) {
+  public static ItemCastingRecipeBuilder tableRecipe(Tag<Item> result) {
     return tableRecipe(ItemOutput.fromTag(result, 1));
   }
 
@@ -100,7 +100,7 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param amount  amount of fluid
    * @return  Builder instance
    */
-  public ItemCastingRecipeBuilder setFluid(ITag<Fluid> tagIn, int amount) {
+  public ItemCastingRecipeBuilder setFluid(Tag<Fluid> tagIn, int amount) {
     return this.setFluid(FluidIngredient.of(tagIn, amount));
   }
 
@@ -143,7 +143,7 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param temperature  fluid temperature
    * @param amount       amount of fluid
    */
-  public ItemCastingRecipeBuilder setFluidAndTime(int temperature, ITag<Fluid> tagIn, int amount) {
+  public ItemCastingRecipeBuilder setFluidAndTime(int temperature, Tag<Fluid> tagIn, int amount) {
     setFluid(tagIn, amount);
     setCoolingTime(temperature, amount);
     return this;
@@ -157,8 +157,8 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param consumed  If true, the cast is consumed
    * @return  Builder instance
    */
-  public ItemCastingRecipeBuilder setCast(ITag<Item> tagIn, boolean consumed) {
-    return this.setCast(Ingredient.fromTag(tagIn), consumed);
+  public ItemCastingRecipeBuilder setCast(Tag<Item> tagIn, boolean consumed) {
+    return this.setCast(Ingredient.of(tagIn), consumed);
   }
 
   /**
@@ -167,8 +167,8 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param consumed  If true, the cast is consumed
    * @return  Builder instance
    */
-  public ItemCastingRecipeBuilder setCast(IItemProvider itemIn, boolean consumed) {
-    return this.setCast(Ingredient.fromItems(itemIn), consumed);
+  public ItemCastingRecipeBuilder setCast(ItemLike itemIn, boolean consumed) {
+    return this.setCast(Ingredient.of(itemIn), consumed);
   }
 
   /**
@@ -198,12 +198,12 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
    * @param consumerIn  Recipe consumer
    */
   @Override
-  public void build(Consumer<IFinishedRecipe> consumerIn) {
+  public void build(Consumer<FinishedRecipe> consumerIn) {
     this.build(consumerIn, Objects.requireNonNull(this.result.get().getItem().getRegistryName()));
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumer, ResourceLocation id) {
+  public void build(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
     if (this.fluid == FluidIngredient.EMPTY) {
       throw new IllegalStateException("Casting recipes require a fluid input");
     }
@@ -211,7 +211,7 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
       throw new IllegalStateException("Cooling time is too low, must be at least 0");
     }
     ResourceLocation advancementId = this.buildOptionalAdvancement(id, "casting");
-    consumer.accept(new ItemCastingRecipeBuilder.Result(id, advancementId));
+    consumer.accept(new Result(id, advancementId));
   }
 
   private class Result extends AbstractFinishedRecipe {
@@ -220,17 +220,17 @@ public class ItemCastingRecipeBuilder extends AbstractRecipeBuilder<ItemCastingR
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return recipeSerializer;
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
       if (!group.isEmpty()) {
         json.addProperty("group", group);
       }
       if (cast != Ingredient.EMPTY) {
-        json.add("cast", cast.serialize());
+        json.add("cast", cast.toJson());
         if (consumed) {
           json.addProperty("cast_consumed", true);
         }

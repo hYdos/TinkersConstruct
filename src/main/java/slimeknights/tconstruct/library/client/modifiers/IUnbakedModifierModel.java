@@ -1,8 +1,7 @@
 package slimeknights.tconstruct.library.client.modifiers;
 
-import net.minecraft.client.renderer.model.RenderMaterial;
-
 import javax.annotation.Nullable;
+import net.minecraft.client.resources.model.Material;
 import java.util.function.Function;
 
 /**
@@ -17,5 +16,5 @@ public interface IUnbakedModifierModel {
    * @return  Baked model using the given textures, or null if the modifier cannot be displayed on this tool (e.g. missing textures)
    */
   @Nullable
-  IBakedModifierModel forTool(Function<String,RenderMaterial> smallTextureGetter, Function<String,RenderMaterial> largeTextureGetter);
+  IBakedModifierModel forTool(Function<String,Material> smallTextureGetter, Function<String,Material> largeTextureGetter);
 }

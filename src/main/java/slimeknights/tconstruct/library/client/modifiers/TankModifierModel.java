@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.library.client.modifiers;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.math.Transformation;
 import lombok.Data;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.RenderMaterial;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.vector.TransformationMatrix;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.model.ItemTextureQuadConverter;
 import net.minecraftforge.fluids.FluidAttributes;
@@ -26,12 +26,12 @@ import java.util.function.Function;
 public class TankModifierModel extends NormalModifierModel {
   /** Constant unbaked model instance, as they are all the same */
   public static final IUnbakedModifierModel UNBAKED_INSTANCE = (smallGetter, largeGetter) -> {
-    RenderMaterial smallTexture = smallGetter.apply("");
-    RenderMaterial largeTexture = largeGetter.apply("");
-    RenderMaterial smallPartial = smallGetter.apply("_partial");
-    RenderMaterial largePartial = largeGetter.apply("_partial");
-    RenderMaterial smallFull = smallGetter.apply("_full");
-    RenderMaterial largeFull = largeGetter.apply("_full");
+    Material smallTexture = smallGetter.apply("");
+    Material largeTexture = largeGetter.apply("");
+    Material smallPartial = smallGetter.apply("_partial");
+    Material largePartial = largeGetter.apply("_partial");
+    Material smallFull = smallGetter.apply("_full");
+    Material largeFull = largeGetter.apply("_full");
     if (smallTexture != null || largeTexture != null) {
       return new TankModifierModel(smallTexture, largeTexture, smallPartial, largePartial, smallFull, largeFull);
     }
@@ -39,13 +39,13 @@ public class TankModifierModel extends NormalModifierModel {
   };
 
   /** Textures to show */
-  private final RenderMaterial[] fluidTextures;
+  private final Material[] fluidTextures;
 
-  public TankModifierModel(@Nullable RenderMaterial smallTexture, @Nullable RenderMaterial largeTexture,
-                           @Nullable RenderMaterial smallPartial, @Nullable RenderMaterial largePartial,
-                           @Nullable RenderMaterial smallFull, @Nullable RenderMaterial largeFull) {
+  public TankModifierModel(@Nullable Material smallTexture, @Nullable Material largeTexture,
+                           @Nullable Material smallPartial, @Nullable Material largePartial,
+                           @Nullable Material smallFull, @Nullable Material largeFull) {
     super(smallTexture, largeTexture);
-    this.fluidTextures = new RenderMaterial[] { smallPartial, largePartial, smallFull, largeFull };
+    this.fluidTextures = new Material[] { smallPartial, largePartial, smallFull, largeFull };
   }
 
   @Nullable
@@ -65,7 +65,7 @@ public class TankModifierModel extends NormalModifierModel {
   }
 
   @Override
-  public ImmutableList<BakedQuad> getQuads(IModifierToolStack tool, ModifierEntry entry, Function<RenderMaterial,TextureAtlasSprite> spriteGetter, TransformationMatrix transforms, boolean isLarge) {
+  public ImmutableList<BakedQuad> getQuads(IModifierToolStack tool, ModifierEntry entry, Function<Material,TextureAtlasSprite> spriteGetter, Transformation transforms, boolean isLarge) {
     // first, determine stored fluid
     ImmutableList<BakedQuad> quads = super.getQuads(tool, entry, spriteGetter, transforms, isLarge);
     // modifier must be tank
@@ -76,7 +76,7 @@ public class TankModifierModel extends NormalModifierModel {
       if (!fluid.isEmpty()) {
         // must have texture for the proper state
         boolean isFull = fluid.getAmount() == tank.getCapacity(tool);
-        RenderMaterial template = fluidTextures[(isFull ? 2 : 0) | (isLarge ? 1 : 0)];
+        Material template = fluidTextures[(isFull ? 2 : 0) | (isLarge ? 1 : 0)];
         if (template != null) {
           // finally, build (mostly based on bucket model)
           ImmutableList.Builder<BakedQuad> builder = ImmutableList.builder();

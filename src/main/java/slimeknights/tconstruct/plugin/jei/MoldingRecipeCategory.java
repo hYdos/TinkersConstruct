@@ -1,6 +1,5 @@
 package slimeknights.tconstruct.plugin.jei;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -9,17 +8,17 @@ import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.ForgeI18n;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.client.GuiUtil;
 import slimeknights.tconstruct.library.recipe.RecipeTypes;
 import slimeknights.tconstruct.library.recipe.molding.MoldingRecipe;
 import slimeknights.tconstruct.smeltery.TinkerSmeltery;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,7 +26,7 @@ import java.util.List;
 public class MoldingRecipeCategory implements IRecipeCategory<MoldingRecipe> {
   private static final ResourceLocation BACKGROUND_LOC = Util.getResource("textures/gui/jei/casting.png");
   private static final String KEY_TITLE = Util.makeTranslationKey("jei", "molding.title");
-  private static final ITextComponent TOOLTIP_PATTERN_CONSUMED = new TranslationTextComponent(Util.makeTranslationKey("jei", "molding.pattern_consumed"));
+  private static final Component TOOLTIP_PATTERN_CONSUMED = new TranslatableComponent(Util.makeTranslationKey("jei", "molding.pattern_consumed"));
 
   @Getter
   private final IDrawable background;
@@ -57,7 +56,7 @@ public class MoldingRecipeCategory implements IRecipeCategory<MoldingRecipe> {
   }
 
   @Override
-  public void draw(MoldingRecipe recipe, MatrixStack matrixStack, double mouseX, double mouseY) {
+  public void draw(MoldingRecipe recipe, PoseStack matrixStack, double mouseX, double mouseY) {
     // draw the main block
     IDrawable block = recipe.getType() == RecipeTypes.MOLDING_BASIN ? basin : table;
     block.draw(matrixStack, 3, 40);
@@ -72,7 +71,7 @@ public class MoldingRecipeCategory implements IRecipeCategory<MoldingRecipe> {
   }
 
   @Override
-  public List<ITextComponent> getTooltipStrings(MoldingRecipe recipe, double mouseX, double mouseY) {
+  public List<Component> getTooltipStrings(MoldingRecipe recipe, double mouseX, double mouseY) {
     if (recipe.isPatternConsumed() && !recipe.getPattern().hasNoMatchingItems() && GuiUtil.isHovered((int)mouseX, (int)mouseY, 50, 7, 18, 18)) {
       return Collections.singletonList(TOOLTIP_PATTERN_CONSUMED);
     }
@@ -82,7 +81,7 @@ public class MoldingRecipeCategory implements IRecipeCategory<MoldingRecipe> {
   @Override
   public void setIngredients(MoldingRecipe recipe, IIngredients ingredients) {
     ingredients.setInputIngredients(recipe.getIngredients());
-    ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+    ingredients.setOutput(VanillaTypes.ITEM, recipe.getResultItem());
   }
 
   @Override

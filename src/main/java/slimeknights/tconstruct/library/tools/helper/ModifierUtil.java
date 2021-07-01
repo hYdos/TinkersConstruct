@@ -2,15 +2,15 @@ package slimeknights.tconstruct.library.tools.helper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemStack.TooltipDisplayFlags;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStack.TooltipPart;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import slimeknights.tconstruct.library.modifiers.Modifier;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.recipe.tinkerstation.ValidatedResult;
@@ -39,7 +39,7 @@ public final class ModifierUtil {
    */
   public static boolean applyHarvestEnchants(ToolStack tool, ItemStack stack, ToolHarvestContext context) {
     boolean addedEnchants = false;
-    PlayerEntity player = context.getPlayer();
+    Player player = context.getPlayer();
     if (player == null || !player.isCreative()) {
       Map<Enchantment, Integer> enchantments = new HashMap<>();
       BiConsumer<Enchantment,Integer> enchantmentConsumer = (ench, add) -> {
@@ -57,7 +57,7 @@ public final class ModifierUtil {
       if (!enchantments.isEmpty()) {
         addedEnchants = true;
         EnchantmentHelper.setEnchantments(enchantments, stack);
-        stack.getOrCreateTag().putInt(TAG_HIDE_FLAGS, TooltipDisplayFlags.ENCHANTMENTS.func_242397_a());
+        stack.getOrCreateTag().putInt(TAG_HIDE_FLAGS, TooltipPart.ENCHANTMENTS.getMask());
       }
     }
     return addedEnchants;
@@ -68,7 +68,7 @@ public final class ModifierUtil {
    * @param stack  Stack to clear enchants
    */
   public static void clearEnchantments(ItemStack stack) {
-    CompoundNBT nbt = stack.getTag();
+    CompoundTag nbt = stack.getTag();
     if (nbt != null) {
       nbt.remove(TAG_ENCHANTMENTS);
       nbt.remove(TAG_HIDE_FLAGS);

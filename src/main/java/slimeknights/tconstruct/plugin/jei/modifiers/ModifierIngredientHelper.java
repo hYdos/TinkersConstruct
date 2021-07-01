@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.plugin.jei.modifiers;
 
 import mezz.jei.api.ingredients.IIngredientHelper;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 
 import javax.annotation.Nullable;

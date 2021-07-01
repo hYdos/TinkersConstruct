@@ -1,11 +1,11 @@
 package slimeknights.tconstruct.tables.block.table;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockReader;
 import slimeknights.tconstruct.tables.tileentity.table.PartBuilderTileEntity;
 
 import javax.annotation.Nonnull;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class PartBuilderBlock extends RetexturedTableBlock {
 
@@ -15,7 +15,7 @@ public class PartBuilderBlock extends RetexturedTableBlock {
 
   @Nonnull
   @Override
-  public TileEntity createTileEntity(BlockState blockState, IBlockReader iBlockReader) {
+  public BlockEntity createTileEntity(BlockState blockState, BlockGetter iBlockReader) {
     return new PartBuilderTileEntity();
   }
 }

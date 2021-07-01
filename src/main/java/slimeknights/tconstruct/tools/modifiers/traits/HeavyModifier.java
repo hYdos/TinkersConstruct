@@ -1,11 +1,5 @@
 package slimeknights.tconstruct.tools.modifiers.traits;
 
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.inventory.EquipmentSlotType.Group;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.modifiers.Modifier;
 import slimeknights.tconstruct.library.tools.ToolDefinition;
@@ -17,6 +11,12 @@ import slimeknights.tconstruct.library.tools.stat.ToolStats;
 
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlot.Type;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public class HeavyModifier extends Modifier {
   private static final UUID MAINHAND_ATTRIBUTE_UUID = UUID.fromString("f8a6e738-642b-11eb-ae93-0242ac130002");
@@ -39,9 +39,9 @@ public class HeavyModifier extends Modifier {
 	 * @param consumer  Attribute consumer
 	 */
   @Override
-  public void addAttributes(IModifierToolStack tool, int level, EquipmentSlotType slot, BiConsumer<Attribute,AttributeModifier> consumer) {
-    if (slot.getSlotType() == Group.HAND) {
-      consumer.accept(Attributes.MOVEMENT_SPEED, new AttributeModifier(slot == EquipmentSlotType.OFFHAND ? OFFHAND_ATTRIBUTE_UUID : MAINHAND_ATTRIBUTE_UUID,
+  public void addAttributes(IModifierToolStack tool, int level, EquipmentSlot slot, BiConsumer<Attribute,AttributeModifier> consumer) {
+    if (slot.getType() == Type.HAND) {
+      consumer.accept(Attributes.MOVEMENT_SPEED, new AttributeModifier(slot == EquipmentSlot.OFFHAND ? OFFHAND_ATTRIBUTE_UUID : MAINHAND_ATTRIBUTE_UUID,
                                                                        ATTRIBUTE_NAME, level * (-0.1), Operation.MULTIPLY_BASE));
     }
   }

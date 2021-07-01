@@ -1,13 +1,13 @@
 package slimeknights.tconstruct.gadgets.entity;
 
 import lombok.Getter;
-import net.minecraft.item.Item;
-import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.Item;
 import slimeknights.tconstruct.gadgets.TinkerGadgets;
 
 import java.util.Locale;
 
-public enum FrameType implements IStringSerializable {
+public enum FrameType implements StringRepresentable {
   JEWEL,
   COBALT,
   MANYULLYN,
@@ -27,7 +27,7 @@ public enum FrameType implements IStringSerializable {
   }
 
   @Override
-  public String getString() {
+  public String getSerializedName() {
     return this.toString().toLowerCase(Locale.US);
   }
 

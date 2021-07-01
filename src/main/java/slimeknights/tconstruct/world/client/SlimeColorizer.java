@@ -1,11 +1,11 @@
 package slimeknights.tconstruct.world.client;
 
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
 import slimeknights.tconstruct.shared.block.SlimeType;
 
 import java.util.EnumMap;
 import java.util.Map;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
 
 /**
  * Data class to handle all slime colors

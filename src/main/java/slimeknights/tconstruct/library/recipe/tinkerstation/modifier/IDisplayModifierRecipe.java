@@ -1,9 +1,5 @@
 package slimeknights.tconstruct.library.recipe.tinkerstation.modifier;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.tools.ToolDefinition;
@@ -14,6 +10,10 @@ import slimeknights.tconstruct.library.tools.nbt.StatsNBT;
 import slimeknights.tconstruct.library.tools.nbt.ToolStack;
 
 import javax.annotation.Nullable;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -71,7 +71,7 @@ public interface IDisplayModifierRecipe {
 
   /** Gets a stream of all modifiable items for display */
   static Stream<Item> getAllModifiable() {
-    return TinkerTags.Items.MODIFIABLE.getAllElements().stream();
+    return TinkerTags.Items.MODIFIABLE.getValues().stream();
   }
 
   /** Maps the stream from tool items to applicable tool stacks */
@@ -90,7 +90,7 @@ public interface IDisplayModifierRecipe {
   /* Gets a copy of the stack with the given modifiers */
   static ItemStack withModifiers(ItemStack stack, @Nullable ModifierMatch match, @Nullable ModifierEntry newModifier, Consumer<ModDataNBT> persistentDataConsumer) {
     ItemStack output = stack.copy();
-    CompoundNBT nbt = output.getOrCreateTag();
+    CompoundTag nbt = output.getOrCreateTag();
 
     // build modifiers list
     ModifierNBT.Builder builder = ModifierNBT.builder();
@@ -101,14 +101,14 @@ public interface IDisplayModifierRecipe {
       builder.add(newModifier);
     }
     ModifierNBT modifiers = builder.build();
-    ListNBT list = modifiers.serializeToNBT();
+    ListTag list = modifiers.serializeToNBT();
     nbt.put(ToolStack.TAG_UPGRADES, list);
     nbt.put(ToolStack.TAG_MODIFIERS, list);
 
     // build persistent and volatile NBT
-    CompoundNBT persistentNBT = new CompoundNBT();
+    CompoundTag persistentNBT = new CompoundTag();
     ModDataNBT persistentData = ModDataNBT.readFromNBT(persistentNBT);
-    CompoundNBT volatileNBT = new CompoundNBT();
+    CompoundTag volatileNBT = new CompoundTag();
     ModDataNBT volatileData = ModDataNBT.readFromNBT(volatileNBT);
     persistentDataConsumer.accept(persistentData);
     for (ModifierEntry entry : modifiers.getModifiers()) {

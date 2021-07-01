@@ -1,18 +1,17 @@
 package slimeknights.tconstruct.library.book.elements;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.client.audio.SoundHandler;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.sounds.SoundEvents;
 import slimeknights.mantle.client.book.data.BookData;
 import slimeknights.mantle.client.screen.book.ArrowButton;
 import slimeknights.mantle.client.screen.book.element.ArrowElement;
 import slimeknights.mantle.client.screen.book.element.BookElement;
 import slimeknights.tconstruct.library.book.content.ContentModifier;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -25,19 +24,19 @@ public class CycleRecipeElement extends ArrowElement {
   @Override
   public void mouseClicked(double mouseX, double mouseY, int mouseButton) {
     if (this.button != null && this.isHovered(mouseX, mouseY)) {
-      this.playDownSound(Minecraft.getInstance().getSoundHandler());
+      this.playDownSound(Minecraft.getInstance().getSoundManager());
       this.button.onPress();
     }
   }
 
-  public void playDownSound(SoundHandler handler) {
-    handler.play(SimpleSound.master(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+  public void playDownSound(SoundManager handler) {
+    handler.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
   }
 
   @Override
-  public void drawOverlay(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks, FontRenderer fontRenderer) {
+  public void drawOverlay(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks, Font fontRenderer) {
     if (this.isHovered(mouseX, mouseY)) {
-      this.drawHoveringText(matrixStack, Collections.singletonList(new TranslationTextComponent("gui.tconstruct.manual.cycle.recipes")), mouseX, mouseY, fontRenderer);
+      this.drawHoveringText(matrixStack, Collections.singletonList(new TranslatableComponent("gui.tconstruct.manual.cycle.recipes")), mouseX, mouseY, fontRenderer);
     }
   }
 }

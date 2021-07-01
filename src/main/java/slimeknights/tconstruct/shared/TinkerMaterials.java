@@ -1,10 +1,10 @@
 package slimeknights.tconstruct.shared;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.item.Item;
-import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.event.RegistryEvent;
@@ -21,7 +21,7 @@ import slimeknights.tconstruct.shared.block.SlimesteelBlock;
  */
 @SuppressWarnings("unused")
 public final class TinkerMaterials extends TinkerModule {
-  private static final Block.Properties TRANSPARENT_METAL = builder(Material.IRON, ToolType.PICKAXE, SoundType.METAL).setRequiresTool().hardnessAndResistance(5.0f).notSolid();
+  private static final Block.Properties TRANSPARENT_METAL = builder(Material.METAL, ToolType.PICKAXE, SoundType.METAL).requiresCorrectToolForDrops().strength(5.0f).noOcclusion();
 
   // ores
   public static final MetalItemObject copper = BLOCKS.registerMetal("copper", GENERIC_METAL_BLOCK, GENERAL_TOOLTIP_BLOCK_ITEM, GENERAL_PROPS);
@@ -45,7 +45,7 @@ public final class TinkerMaterials extends TinkerModule {
    * Serializers
    */
   @SubscribeEvent
-  void registerSerializers(RegistryEvent<IRecipeSerializer<?>> event) {
+  void registerSerializers(RegistryEvent<RecipeSerializer<?>> event) {
     CraftingHelper.register(MaterialIngredient.Serializer.ID, MaterialIngredient.Serializer.INSTANCE);
   }
 }

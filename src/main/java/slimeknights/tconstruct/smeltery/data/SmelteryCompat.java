@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.smeltery.data;
 
 import lombok.Getter;
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
 import slimeknights.mantle.registration.object.FluidObject;
 import slimeknights.tconstruct.fluids.TinkerFluids;

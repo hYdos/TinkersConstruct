@@ -1,9 +1,9 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Direction;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import slimeknights.tconstruct.library.modifiers.IncrementalModifier;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
@@ -24,16 +24,16 @@ public class HydraulicModifier extends IncrementalModifier {
     if (!isEffective) {
       return;
     }
-    PlayerEntity player = event.getPlayer();
+    Player player = event.getPlayer();
     float bonus = 0;
     // highest bonus in water
-    if (player.areEyesInFluid(FluidTags.WATER)) {
+    if (player.isEyeInFluid(FluidTags.WATER)) {
       bonus = 8;
       // if not enchanted with aqua affinity, multiply by 5 to cancel out the effects of water
       if (!EnchantmentHelper.hasAquaAffinity(player)) {
         bonus *= 5;
       }
-    } else if (player.getEntityWorld().isRainingAt(player.getPosition())) {
+    } else if (player.getCommandSenderWorld().isRainingAt(player.blockPosition())) {
       // partial bonus in the rain
       bonus = 4;
     }

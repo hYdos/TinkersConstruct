@@ -1,9 +1,9 @@
 package slimeknights.tconstruct.smeltery.tileentity;
 
 import lombok.Getter;
-import net.minecraft.block.BlockState;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import slimeknights.tconstruct.common.config.Config;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.materials.MaterialValues;
@@ -30,7 +30,7 @@ public class SmelteryTileEntity extends HeatingStructureTileEntity {
   private final MultiAlloyingModule alloyingModule = new MultiAlloyingModule(this, alloyTank);
 
   public SmelteryTileEntity() {
-    super(TinkerSmeltery.smeltery.get(), new TranslationTextComponent(Util.makeTranslationKey("gui", "smeltery")));
+    super(TinkerSmeltery.smeltery.get(), new TranslatableComponent(Util.makeTranslationKey("gui", "smeltery")));
   }
 
   @Override
@@ -45,7 +45,7 @@ public class SmelteryTileEntity extends HeatingStructureTileEntity {
 
   @Override
   protected void heat() {
-    if (structure == null || world == null) {
+    if (structure == null || level == null) {
       return;
     }
 
@@ -94,8 +94,8 @@ public class SmelteryTileEntity extends HeatingStructureTileEntity {
           // update the active state
           boolean hasFuel = fuelModule.hasFuel();
           BlockState state = getBlockState();
-          if (state.get(ControllerBlock.ACTIVE) != hasFuel) {
-            world.setBlockState(pos, state.with(ControllerBlock.ACTIVE, hasFuel));
+          if (state.getValue(ControllerBlock.ACTIVE) != hasFuel) {
+            level.setBlockAndUpdate(worldPosition, state.setValue(ControllerBlock.ACTIVE, hasFuel));
           }
           fuelModule.decreaseFuel(fuelRate);
           break;

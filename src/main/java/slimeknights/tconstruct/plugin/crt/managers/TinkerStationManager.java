@@ -9,9 +9,6 @@ import com.blamejared.crafttweaker.api.item.IItemStack;
 import com.blamejared.crafttweaker.api.managers.IRecipeManager;
 import com.blamejared.crafttweaker.impl.actions.recipes.ActionAddRecipe;
 import com.blamejared.crafttweaker.impl.actions.recipes.ActionRemoveRecipe;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.util.ResourceLocation;
 import org.openzen.zencode.java.ZenCodeType;
 import slimeknights.mantle.recipe.SizedIngredient;
 import slimeknights.tconstruct.library.MaterialRegistry;
@@ -31,6 +28,8 @@ import slimeknights.tconstruct.plugin.crt.CRTHelper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.RecipeType;
 
 @ZenRegister
 @ZenCodeType.Name("mods.tconstruct.TinkerStation")
@@ -96,7 +95,7 @@ public class TinkerStationManager implements IRecipeManager {
   }
 
   @Override
-  public IRecipeType<ITinkerStationRecipe> getRecipeType() {
+  public RecipeType<ITinkerStationRecipe> getRecipeType() {
     return RecipeTypes.TINKER_STATION;
   }
 

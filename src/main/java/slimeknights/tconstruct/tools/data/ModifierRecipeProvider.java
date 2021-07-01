@@ -1,18 +1,18 @@
 package slimeknights.tconstruct.tools.data;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.data.CookingRecipeBuilder;
-import net.minecraft.data.CustomRecipeBuilder;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.data.ShapedRecipeBuilder;
-import net.minecraft.data.ShapelessRecipeBuilder;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
+import net.minecraft.data.recipes.SpecialRecipeBuilder;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.IItemProvider;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.EntityIngredient;
@@ -55,13 +55,13 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
   }
 
   @Override
-  protected void registerRecipes(Consumer<IFinishedRecipe> consumer) {
+  protected void buildShapelessRecipes(Consumer<FinishedRecipe> consumer) {
     addItemRecipes(consumer);
     addModifierRecipes(consumer);
     addHeadRecipes(consumer);
   }
 
-  private void addItemRecipes(Consumer<IFinishedRecipe> consumer) {
+  private void addItemRecipes(Consumer<FinishedRecipe> consumer) {
     String folder = "tools/modifiers/";
 
     // reinforcements
@@ -75,31 +75,31 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
                             .build(consumer, prefix(TinkerModifiers.slimesteelReinforcement, folder));
 
     // silky cloth
-    ShapedRecipeBuilder.shapedRecipe(TinkerModifiers.silkyCloth)
-                       .key('s', Tags.Items.STRING)
-                       .key('g', TinkerMaterials.roseGold.getIngotTag())
+    ShapedRecipeBuilder.shaped(TinkerModifiers.silkyCloth)
+                       .define('s', Tags.Items.STRING)
+                       .define('g', TinkerMaterials.roseGold.getIngotTag())
                        .patternLine("sss")
                        .patternLine("sgs")
                        .patternLine("sss")
-                       .addCriterion("has_item", hasItem(Tags.Items.INGOTS_GOLD))
+                       .addCriterion("has_item", has(Tags.Items.INGOTS_GOLD))
                        .build(consumer, prefix(TinkerModifiers.silkyCloth, folder));
 
     // slime crystals
     TinkerModifiers.slimeCrystal.forEach((type, crystal) -> {
-      IItemProvider slimeball = TinkerCommons.slimeball.get(type);
-      CookingRecipeBuilder.blastingRecipe(Ingredient.fromItems(slimeball), crystal, 1.0f, 400)
-                          .addCriterion("has_item", hasItem(slimeball))
-                          .build(consumer, folder + "slime_crystal/" + type.getString());
+      ItemLike slimeball = TinkerCommons.slimeball.get(type);
+      SimpleCookingRecipeBuilder.blasting(Ingredient.of(slimeball), crystal, 1.0f, 400)
+                          .unlockedBy("has_item", has(slimeball))
+                          .save(consumer, folder + "slime_crystal/" + type.getSerializedName());
     });
 
     // wither bone purifying
-    ShapelessRecipeBuilder.shapelessRecipe(Items.BONE)
-                          .addIngredient(TinkerTags.Items.WITHER_BONES)
-                          .addCriterion("has_bone", hasItem(TinkerTags.Items.WITHER_BONES))
-                          .build(withCondition(consumer, ConfigEnabledCondition.WITHER_BONE_CONVERSION), location(folder + "wither_bone_conversion"));
+    ShapelessRecipeBuilder.shapeless(Items.BONE)
+                          .requires(TinkerTags.Items.WITHER_BONES)
+                          .unlockedBy("has_bone", has(TinkerTags.Items.WITHER_BONES))
+                          .save(withCondition(consumer, ConfigEnabledCondition.WITHER_BONE_CONVERSION), location(folder + "wither_bone_conversion"));
   }
 
-  private void addModifierRecipes(Consumer<IFinishedRecipe> consumer) {
+  private void addModifierRecipes(Consumer<FinishedRecipe> consumer) {
     // upgrades
     String upgradeFolder = "tools/modifiers/upgrade/";
     String abilityFolder = "tools/modifiers/ability/";
@@ -451,7 +451,7 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
                          .build(consumer, prefixR(TinkerModifiers.reach, abilityFolder));
     // block transformers
     ModifierRecipeBuilder.modifier(TinkerModifiers.pathing.get())
-                         .setTools(new IngredientWithout(Ingredient.fromTag(TinkerTags.Items.HARVEST_PRIMARY), Ingredient.fromItems(TinkerTools.mattock, TinkerTools.excavator)))
+                         .setTools(new IngredientWithout(Ingredient.of(TinkerTags.Items.HARVEST_PRIMARY), Ingredient.of(TinkerTools.mattock, TinkerTools.excavator)))
                          .addInput(SizedIngredient.of(MaterialIngredient.fromItem(TinkerToolParts.pickaxeHead.get())))
                          .addInput(TinkerTags.Items.INGOTS_NETHERITE_SCRAP)
                          .addInput(SizedIngredient.of(MaterialIngredient.fromItem(TinkerToolParts.smallAxeHead.get())))
@@ -459,7 +459,7 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
                          .setAbilitySlots(1)
                          .build(consumer, prefixR(TinkerModifiers.pathing, abilityFolder));
     ModifierRecipeBuilder.modifier(TinkerModifiers.stripping.get())
-                         .setTools(new IngredientWithout(Ingredient.fromTag(TinkerTags.Items.HARVEST_PRIMARY), Ingredient.fromItems(TinkerTools.handAxe, TinkerTools.broadAxe)))
+                         .setTools(new IngredientWithout(Ingredient.of(TinkerTags.Items.HARVEST_PRIMARY), Ingredient.of(TinkerTools.handAxe, TinkerTools.broadAxe)))
                          .addInput(SizedIngredient.of(MaterialIngredient.fromItem(TinkerToolParts.smallAxeHead.get())))
                          .addInput(TinkerTags.Items.INGOTS_NETHERITE_SCRAP)
                          .addInput(SizedIngredient.of(MaterialIngredient.fromItem(TinkerToolParts.toolBinding.get())))
@@ -467,7 +467,7 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
                          .setAbilitySlots(1)
                          .build(consumer, prefixR(TinkerModifiers.stripping, abilityFolder));
     ModifierRecipeBuilder.modifier(TinkerModifiers.tilling.get())
-                         .setTools(new IngredientWithout(Ingredient.fromTag(TinkerTags.Items.HARVEST_PRIMARY), Ingredient.fromItems(TinkerTools.kama, TinkerTools.scythe)))
+                         .setTools(new IngredientWithout(Ingredient.of(TinkerTags.Items.HARVEST_PRIMARY), Ingredient.of(TinkerTools.kama, TinkerTools.scythe)))
                          .addInput(SizedIngredient.of(MaterialIngredient.fromItem(TinkerToolParts.smallBlade.get())))
                          .addInput(TinkerTags.Items.INGOTS_NETHERITE_SCRAP)
                          .addInput(SizedIngredient.of(MaterialIngredient.fromItem(TinkerToolParts.toolBinding.get())))
@@ -503,7 +503,7 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
                          .addInput(TinkerTags.Items.SKY_SLIMEBALL)
                          .setMaxLevel(1)
                          .setAbilitySlots(1)
-                         .setTools(new IngredientWithout(new IngredientIntersection(Ingredient.fromTag(TinkerTags.Items.MELEE), Ingredient.fromTag(TinkerTags.Items.ONE_HANDED)), Ingredient.fromItems(TinkerTools.dagger)))
+                         .setTools(new IngredientWithout(new IngredientIntersection(Ingredient.of(TinkerTags.Items.MELEE), Ingredient.of(TinkerTags.Items.ONE_HANDED)), Ingredient.of(TinkerTools.dagger)))
                          .build(consumer, prefixR(TinkerModifiers.duelWielding, abilityFolder));
     
     /*
@@ -518,7 +518,7 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
                          .setMaxLevel(1)
                          .build(consumer, prefixR(TinkerModifiers.harmonious, slotlessFolder));
     ModifierRecipeBuilder.modifier(TinkerModifiers.recapitated.get())
-                         .addInput(SizedIngredient.of(new IngredientWithout(Ingredient.fromTag(Tags.Items.HEADS), Ingredient.fromItems(Items.DRAGON_HEAD))))
+                         .addInput(SizedIngredient.of(new IngredientWithout(Ingredient.of(Tags.Items.HEADS), Ingredient.of(Items.DRAGON_HEAD))))
                          .setMaxLevel(1)
                          .build(consumer, prefixR(TinkerModifiers.recapitated, slotlessFolder));
     ModifierRecipeBuilder.modifier(TinkerModifiers.resurrected.get())
@@ -551,7 +551,7 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
 //                                 .build(consumer, location(slotlessFolder + "remove_modifier"));
   }
 
-  private void addHeadRecipes(Consumer<IFinishedRecipe> consumer) {
+  private void addHeadRecipes(Consumer<FinishedRecipe> consumer) {
     String folder = "tools/severing/";
     // first, beheading
     SeveringRecipeBuilder.severing(EntityIngredient.of(EntityType.ZOMBIE, EntityType.HUSK, EntityType.DROWNED), Items.ZOMBIE_HEAD)
@@ -562,8 +562,8 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
 												 .build(consumer, location(folder + "wither_skeleton_skull"));
     SeveringRecipeBuilder.severing(EntityIngredient.of(EntityType.CREEPER), Items.CREEPER_HEAD)
 												 .build(consumer, location(folder + "creeper_head"));
-    CustomRecipeBuilder.customRecipe(TinkerModifiers.playerBeheadingSerializer.get()).build(consumer, locationString(folder + "player_head"));
-    CustomRecipeBuilder.customRecipe(TinkerModifiers.snowGolemBeheadingSerializer.get()).build(consumer, locationString(folder + "snow_golem_head"));
+    SpecialRecipeBuilder.special(TinkerModifiers.playerBeheadingSerializer.get()).save(consumer, locationString(folder + "player_head"));
+    SpecialRecipeBuilder.special(TinkerModifiers.snowGolemBeheadingSerializer.get()).save(consumer, locationString(folder + "snow_golem_head"));
     SeveringRecipeBuilder.severing(EntityIngredient.of(EntityType.IRON_GOLEM), Blocks.CARVED_PUMPKIN)
                          .build(consumer, location(folder + "iron_golem_head"));
 
@@ -611,12 +611,12 @@ public class ModifierRecipeProvider extends BaseRecipeProvider {
                          .setChildOutput(null) // only adults
                          .build(consumer, location(folder + "chicken_feather"));
     // beshrooming
-    CustomRecipeBuilder.customRecipe(TinkerModifiers.mooshroomDemushroomingSerializer.get()).build(consumer, locationString(folder + "mooshroom_shroom"));
+    SpecialRecipeBuilder.special(TinkerModifiers.mooshroomDemushroomingSerializer.get()).save(consumer, locationString(folder + "mooshroom_shroom"));
     // beshelling
     SeveringRecipeBuilder.severing(EntityIngredient.of(EntityType.TURTLE), Items.TURTLE_HELMET)
                          .setChildOutput(ItemOutput.fromItem(Items.SCUTE))
                          .build(consumer, location(folder + "turtle_shell"));
     // befleecing
-    CustomRecipeBuilder.customRecipe(TinkerModifiers.sheepShearing.get()).build(consumer, locationString(folder + "sheep_wool"));
+    SpecialRecipeBuilder.special(TinkerModifiers.sheepShearing.get()).save(consumer, locationString(folder + "sheep_wool"));
   }
 }

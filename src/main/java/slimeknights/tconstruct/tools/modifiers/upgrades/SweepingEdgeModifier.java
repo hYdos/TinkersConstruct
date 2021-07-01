@@ -1,15 +1,15 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades;
 
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.modifiers.IncrementalModifier;
 import slimeknights.tconstruct.library.tools.nbt.IModifierToolStack;
 
 import java.util.List;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 
 public class SweepingEdgeModifier extends IncrementalModifier {
-  private static final ITextComponent SWEEPING_BONUS = Util.makeTranslation("modifier", "sweeping_edge.damage");
+  private static final Component SWEEPING_BONUS = Util.makeTranslation("modifier", "sweeping_edge.damage");
 
   public SweepingEdgeModifier() {
     super(0x888888);
@@ -26,8 +26,8 @@ public class SweepingEdgeModifier extends IncrementalModifier {
   }
 
   @Override
-  public void addInformation(IModifierToolStack tool, int level, List<ITextComponent> tooltip, boolean isAdvanced, boolean detailed) {
+  public void addInformation(IModifierToolStack tool, int level, List<Component> tooltip, boolean isAdvanced, boolean detailed) {
     float amount = 1 - 1f / (getScaledLevel(tool, level) + 1);
-    tooltip.add(applyStyle(new StringTextComponent(Util.dfPercent.format(amount)).appendString(" ").append(SWEEPING_BONUS)));
+    tooltip.add(applyStyle(new TextComponent(Util.dfPercent.format(amount)).append(" ").append(SWEEPING_BONUS)));
   }
 }

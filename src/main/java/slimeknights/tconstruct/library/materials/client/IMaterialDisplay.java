@@ -1,6 +1,6 @@
 package slimeknights.tconstruct.library.materials.client;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Contains display information for a material.

@@ -1,14 +1,14 @@
 package slimeknights.tconstruct.common.data.loot;
 
-import net.minecraft.data.loot.EntityLootTables;
-import net.minecraft.entity.EntityType;
-import net.minecraft.loot.ConstantRange;
-import net.minecraft.loot.ItemLootEntry;
-import net.minecraft.loot.LootPool;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.RandomValueRange;
-import net.minecraft.loot.functions.LootingEnchantBonus;
-import net.minecraft.loot.functions.SetCount;
+import net.minecraft.data.loot.EntityLoot;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.storage.loot.ConstantIntValue;
+import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.RandomValueBounds;
+import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.functions.LootingEnchantFunction;
+import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraftforge.registries.ForgeRegistries;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.shared.TinkerCommons;
@@ -18,7 +18,7 @@ import slimeknights.tconstruct.world.TinkerWorld;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class EntityLootTableProvider extends EntityLootTables {
+public class EntityLootTableProvider extends EntityLoot {
 
   @Override
   protected Iterable<EntityType<?>> getKnownEntities() {
@@ -29,17 +29,17 @@ public class EntityLootTableProvider extends EntityLootTables {
 
   @Override
   protected void addTables() {
-    this.registerLootTable(TinkerWorld.earthSlimeEntity.get(), dropSlimeballs(SlimeType.EARTH));
-    this.registerLootTable(TinkerWorld.skySlimeEntity.get(), dropSlimeballs(SlimeType.SKY));
-    this.registerLootTable(TinkerWorld.enderSlimeEntity.get(), dropSlimeballs(SlimeType.ENDER));
+    this.add(TinkerWorld.earthSlimeEntity.get(), dropSlimeballs(SlimeType.EARTH));
+    this.add(TinkerWorld.skySlimeEntity.get(), dropSlimeballs(SlimeType.SKY));
+    this.add(TinkerWorld.enderSlimeEntity.get(), dropSlimeballs(SlimeType.ENDER));
   }
 
   private static LootTable.Builder dropSlimeballs(SlimeType type) {
-    return LootTable.builder()
-                    .addLootPool(LootPool.builder()
-                                         .rolls(ConstantRange.of(1))
-                                         .addEntry(ItemLootEntry.builder(TinkerCommons.slimeball.get(type))
-                                                                .acceptFunction(SetCount.builder(RandomValueRange.of(0.0F, 2.0F)))
-                                                                .acceptFunction(LootingEnchantBonus.builder(RandomValueRange.of(0.0F, 1.0F)))));
+    return LootTable.lootTable()
+                    .withPool(LootPool.lootPool()
+                                         .setRolls(ConstantIntValue.exactly(1))
+                                         .add(LootItem.lootTableItem(TinkerCommons.slimeball.get(type))
+                                                                .apply(SetItemCountFunction.setCount(RandomValueBounds.between(0.0F, 2.0F)))
+                                                                .apply(LootingEnchantFunction.lootingMultiplier(RandomValueBounds.between(0.0F, 1.0F)))));
   }
 }

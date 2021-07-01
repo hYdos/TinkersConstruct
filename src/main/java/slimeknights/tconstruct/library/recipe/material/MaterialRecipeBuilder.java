@@ -4,13 +4,13 @@ import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.Item;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.tags.Tag;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.SetTag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.ItemLike;
 import slimeknights.mantle.recipe.ItemOutput;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.tconstruct.library.materials.MaterialId;
@@ -39,8 +39,8 @@ public class MaterialRecipeBuilder extends AbstractRecipeBuilder<MaterialRecipeB
    * @param tag  Tag input
    * @return  Builder instance
    */
-  public MaterialRecipeBuilder setIngredient(Tag<Item> tag) {
-    return this.setIngredient(Ingredient.fromTag(tag));
+  public MaterialRecipeBuilder setIngredient(SetTag<Item> tag) {
+    return this.setIngredient(Ingredient.of(tag));
   }
 
   /**
@@ -48,8 +48,8 @@ public class MaterialRecipeBuilder extends AbstractRecipeBuilder<MaterialRecipeB
    * @param item  Item input
    * @return  Builder instance
    */
-  public MaterialRecipeBuilder setIngredient(IItemProvider item) {
-    return this.setIngredient(Ingredient.fromItems(item));
+  public MaterialRecipeBuilder setIngredient(ItemLike item) {
+    return this.setIngredient(Ingredient.of(item));
   }
 
   /**
@@ -63,12 +63,12 @@ public class MaterialRecipeBuilder extends AbstractRecipeBuilder<MaterialRecipeB
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumerIn) {
+  public void build(Consumer<FinishedRecipe> consumerIn) {
     this.build(consumerIn, material);
   }
 
   @Override
-  public void build(Consumer<IFinishedRecipe> consumerIn, ResourceLocation id) {
+  public void build(Consumer<FinishedRecipe> consumerIn, ResourceLocation id) {
     if (this.material == null) {
       throw new IllegalStateException("recipe " + id + " has no material associated with it");
     }
@@ -91,11 +91,11 @@ public class MaterialRecipeBuilder extends AbstractRecipeBuilder<MaterialRecipeB
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
       if (!group.isEmpty()) {
         json.addProperty("group", group);
       }
-      json.add("ingredient", ingredient.serialize());
+      json.add("ingredient", ingredient.toJson());
       json.addProperty("value", value);
       json.addProperty("needed", needed);
       json.addProperty("material", material.toString());
@@ -105,7 +105,7 @@ public class MaterialRecipeBuilder extends AbstractRecipeBuilder<MaterialRecipeB
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
       return TinkerTables.materialRecipeSerializer.get();
     }
   }

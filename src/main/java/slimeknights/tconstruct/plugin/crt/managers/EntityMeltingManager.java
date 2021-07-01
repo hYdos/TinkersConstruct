@@ -9,9 +9,9 @@ import com.blamejared.crafttweaker.api.managers.IRecipeManager;
 import com.blamejared.crafttweaker.impl.actions.recipes.ActionAddRecipe;
 import com.blamejared.crafttweaker.impl.actions.recipes.ActionRemoveRecipe;
 import com.blamejared.crafttweaker.impl.entity.MCEntityType;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import org.openzen.zencode.java.ZenCodeType;
 import slimeknights.mantle.recipe.EntityIngredient;
@@ -60,7 +60,7 @@ public class EntityMeltingManager implements IRecipeManager {
   }
 
   @Override
-  public IRecipeType<EntityMeltingRecipe> getRecipeType() {
+  public RecipeType<EntityMeltingRecipe> getRecipeType() {
     return RecipeTypes.ENTITY_MELTING;
   }
   

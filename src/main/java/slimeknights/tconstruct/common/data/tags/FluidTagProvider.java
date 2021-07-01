@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.common.data.tags;
 
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.FluidTagsProvider;
+import net.minecraft.data.tags.FluidTagsProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import slimeknights.mantle.registration.object.FluidObject;
 import slimeknights.tconstruct.TConstruct;
@@ -15,7 +15,7 @@ public class FluidTagProvider extends FluidTagsProvider {
   }
 
   @Override
-  public void registerTags() {
+  public void addTags() {
     // first, register common tags
     // slime
     tagLocal(TinkerFluids.blood);
@@ -77,18 +77,18 @@ public class FluidTagProvider extends FluidTagsProvider {
     tagLocal(TinkerFluids.moltenSteel);
 
     /* Normal tags */
-    this.getOrCreateBuilder(TinkerTags.Fluids.SLIME)
+    this.tag(TinkerTags.Fluids.SLIME)
         .addTag(TinkerFluids.earthSlime.getForgeTag())
         .addTag(TinkerFluids.skySlime.getLocalTag())
         .addTag(TinkerFluids.enderSlime.getLocalTag());
-    this.getOrCreateBuilder(TinkerTags.Fluids.SLIMELIKE)
+    this.tag(TinkerTags.Fluids.SLIMELIKE)
         .addTag(TinkerFluids.magma.getForgeTag())
         .addTag(TinkerFluids.blood.getLocalTag())
         .addTag(TinkerFluids.moltenEnder.getLocalTag())
         .addTag(TinkerTags.Fluids.SLIME);
 
     // these fluids should get ingot and nugget values assigned even if they lack casting recipes
-    this.getOrCreateBuilder(TinkerTags.Fluids.METAL_LIKE)
+    this.tag(TinkerTags.Fluids.METAL_LIKE)
         .addTag(TinkerFluids.moltenEmerald.getLocalTag())
         .addTag(TinkerFluids.moltenQuartz.getLocalTag())
         .addTag(TinkerFluids.moltenDiamond.getLocalTag())
@@ -133,12 +133,12 @@ public class FluidTagProvider extends FluidTagsProvider {
 
   /** Tags this fluid using local tags */
   private void tagLocal(FluidObject<?> fluid) {
-    getOrCreateBuilder(fluid.getLocalTag()).add(fluid.getStill(), fluid.getFlowing());
+    tag(fluid.getLocalTag()).add(fluid.getStill(), fluid.getFlowing());
   }
 
   /** Tags this fluid with local and forge tags */
   private void tagAll(FluidObject<?> fluid) {
     tagLocal(fluid);
-    getOrCreateBuilder(fluid.getForgeTag()).addTag(fluid.getLocalTag());
+    tag(fluid.getForgeTag()).addTag(fluid.getLocalTag());
   }
 }

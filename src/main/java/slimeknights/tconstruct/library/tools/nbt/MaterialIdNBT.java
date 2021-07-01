@@ -4,11 +4,11 @@ import com.google.common.collect.ImmutableList;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.Constants.NBT;
 import slimeknights.tconstruct.library.materials.IMaterial;
@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Similar to {@link slimeknights.tconstruct.library.tools.nbt.MaterialNBT}, but does not check materials against the registry.
+ * Similar to {@link MaterialNBT}, but does not check materials against the registry.
  * Used for rendering so we can have client side only materials for UIs. Anything logic based should use the regular material NBT
  */
 @EqualsAndHashCode
@@ -55,18 +55,18 @@ public class MaterialIdNBT {
    * @param nbt  NBT instance
    * @return  MaterialNBT instance
    */
-  public static MaterialIdNBT readFromNBT(@Nullable INBT nbt) {
-    if (nbt == null || nbt.getId() != Constants.NBT.TAG_LIST) {
+  public static MaterialIdNBT readFromNBT(@Nullable Tag nbt) {
+    if (nbt == null || nbt.getId() != NBT.TAG_LIST) {
       return EMPTY;
     }
-    ListNBT listNBT = (ListNBT) nbt;
-    if (listNBT.getTagType() != Constants.NBT.TAG_STRING) {
+    ListTag listNBT = (ListTag) nbt;
+    if (listNBT.getElementType() != NBT.TAG_STRING) {
       return EMPTY;
     }
 
     List<MaterialId> materials = listNBT.stream()
-      .map(INBT::getString)
-      .map(MaterialId::tryCreate)
+      .map(Tag::getAsString)
+      .map(MaterialId::tryParse)
       .filter(Objects::nonNull)
       .collect(Collectors.toList());
     return new MaterialIdNBT(materials);
@@ -76,11 +76,11 @@ public class MaterialIdNBT {
    * Writes this material list to NBT
    * @return  List of materials
    */
-  public ListNBT serializeToNBT() {
+  public ListTag serializeToNBT() {
     return materials.stream()
                     .map(MaterialId::toString)
-                    .map(StringNBT::valueOf)
-                    .collect(Collectors.toCollection(ListNBT::new));
+                    .map(StringTag::valueOf)
+                    .collect(Collectors.toCollection(ListTag::new));
   }
 
   /**
@@ -89,7 +89,7 @@ public class MaterialIdNBT {
    * @return  MaterialNBT instance
    */
   public static MaterialIdNBT from(ItemStack stack) {
-    CompoundNBT nbt = stack.getTag();
+    CompoundTag nbt = stack.getTag();
     if (nbt != null) {
       return readFromNBT(nbt.getList(ToolStack.TAG_MATERIALS, NBT.TAG_STRING));
     }
